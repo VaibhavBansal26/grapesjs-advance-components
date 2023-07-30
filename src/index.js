@@ -3,18 +3,40 @@ import loadBlocks from './blocks';
 import grapesjs from "grapesjs";
 import en from './locale/en';
 
-export default grapesjs.plugins.add("faqComponent",(editor, opts = {}) => {
+export default grapesjs.plugins.add("AdvancedComponents",(editor, opts = {}) => {
   const options = { ...{
-    label:'FAQ',
-    name:'faq',
-    category:'Custom',
-    type:'text',
+    components: [
+      {
+        visible:true,
+        label:'FAQ',
+        name:'faq',
+        category:'Custom',
+        type:'text',
+        componentType:'faq',
+      },
+      {
+        visible:true,
+        label:'Heading',
+        name:'heading',
+        category:'Custom',
+        type:'text',
+        componentType:'heading',
+      }
+    ],
     i18n: {},
     // default options
   },  ...opts };
 
-  for (let name in options) {
-    if (!(name in opts)) opts[name] = options[name];
+  if (opts.components) {
+    for (const component of options.components) {
+      const { name } = component;
+      const matchingComponent = opts.components.find((cmp) => cmp.name === name);
+      if (!matchingComponent) {
+        opts.components.push(component);
+      }
+    }
+  } else {
+    opts.components = [...options.components];
   }
 
   // Add components

@@ -2,8 +2,8 @@
 
 [DEMO](##)
 > **Provide a live demo of your plugin**
-For a better user engagement create a simple live demo by using services like [JSFiddle](https://jsfiddle.net) [CodeSandbox](https://codesandbox.io) [CodePen](https://codepen.io) and link it here in your README (attaching a screenshot/gif will also be a plus).
-To help you in this process here below you will find the necessary HTML/CSS/JS, so it just a matter of copy-pasting on some of those services. After that delete this part and update the link above
+https://jsfiddle.net/vaibhavbansal26/jdxvcr3y/2/
+
 
 ### HTML
 ```html
@@ -37,22 +37,15 @@ body, html {
 ## Summary
 
 * Plugin name: `grapesjs-advance-components`
+More components and block will be added soon.
 * Components
-    * `component-id-1`
-    * `component-id-2`
+    * `Faq`
+    * `Heading`
     * ...
 * Blocks
-    * `block-id-1`
-    * `block-id-2`
+    * `faq-block`
+    * `heading-block`
     * ...
-
-
-
-## Options
-
-| Option | Description | Default |
-|-|-|-
-| `option1` | Description option | `default value` |
 
 
 
@@ -100,7 +93,27 @@ const editor = grapesjs.init({
   // ...
   plugins: [plugin],
   pluginsOpts: {
-    [plugin]: { /* options */ }
+    [plugin]: { 
+      components:[
+         components:[ {
+              visible:true,
+              label:'FAQ',
+              name:'faq',
+              category:'Custom',
+              type:'text',
+              componentType:'faq',
+            },
+            {
+              visible:true,
+              label:'Heading',
+              name:'heading',
+              category:'Custom',
+              type:'text',
+              componentType:'heading',
+            }
+          ]
+      ]
+     }
   }
   // or
   plugins: [
