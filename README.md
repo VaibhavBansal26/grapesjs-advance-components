@@ -41,10 +41,11 @@ More components and block will be added soon.
 * Components
     * `Faq`
     * `Heading`
-    * ...
+    * `Paragraph`
 * Blocks
     * `faq-block`
     * `heading-block`
+    * `paragraph-block`
     * ...
 
 
@@ -110,6 +111,14 @@ const editor = grapesjs.init({
               category:'Custom',
               type:'text',
               componentType:'heading',
+            }
+            {
+              visible:true,
+              label:'Paragraph',
+              name:'paragraph',
+              category:'Custom',
+              type:'text',
+              componentType:'paragraph',
             }
           ]
       ]
