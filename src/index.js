@@ -21,6 +21,14 @@ export default grapesjs.plugins.add("AdvancedComponents",(editor, opts = {}) => 
         category:'Custom',
         type:'text',
         componentType:'heading',
+      },
+      {
+        visible:true,
+        label:'Paragraph',
+        name:'paragraph',
+        category:'Custom',
+        type:'text',
+        componentType:'paragraph',
       }
     ],
     i18n: {},

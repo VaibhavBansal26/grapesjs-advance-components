@@ -49,6 +49,27 @@ export default (editor, opts = {}) => {
           });
           break;
         }
+        case 'paragraph': {
+          domc.addType('paragraph-block', {
+            model: {
+              defaults: {
+                traits: [],
+                script: function () {
+                    console.log("paragraph block");
+                },
+              },
+            },
+            isComponent: (el) => {
+              if (el.className && el.className.includes("paragraph")) {
+                return {
+                  type: component.name,
+                };
+              }
+            },
+            view: {}
+          });
+          break;
+        }
         default:
           return;
       }
