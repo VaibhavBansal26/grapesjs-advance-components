@@ -38,26 +38,25 @@ body, html {
 
 * Plugin name: `grapesjs-advance-components`
 More components and blocks will be added soon with more advance features.
-```html
+
 | No. | Component                                                                                           | Block               |
 |-----|-----------------------------------------------------------------------------------------------------|---------------------|
 | 1.  | Faq                                                                                                 | faq-block           |
-| 2.  | Heading (h1, h2, h3, h4, h5, h6)                                                                  | heading-block       |
+| 2.  | Heading (h1, h2, h3, h4, h5, h6)                                                                    | heading-block       |
 | 3.  | Paragraph                                                                                           | paragraph-block     |
 | 4.  | List                                                                                                | list-block          |
 | 5.  | Link                                                                                                | link-block          |
 | 6.  | Image                                                                                               | image-block         |
 | 7.  | Video                                                                                               | video-block         |
 | 8.  | Progress Bar                                                                                        | progress-bar-block  |
-| 9.  | Input (color, date, datetime-local, email, file, hidden, image, month, number, password, radio, range, reset, search, submit, tel, text, time, url, week, checkbox) | input-block         |
+| 9.  | Input                                                                                               | input-block         |
 | 10. | Dropdown                                                                                            | dropdown-block      |
 | 11. | Textarea                                                                                            | textarea-block      |
-| 12. | Map                                                                                                | map-block           |
-| 13. | Divider                                                                                            | divider-block       |
+| 12. | Map                                                                                                 | map-block           |
+| 13. | Divider                                                                                             | divider-block       |
 | 14. | Button                                                                                              | button-block        |
 | 15. | Slider                                                                                              | slider-block        |
-
-```
+Supported Input types (color, date, datetime-local, email, file, hidden, image, month, number, password, radio, range, reset, search, submit, tel, text, time, url, week, checkbox)
 
 
 
