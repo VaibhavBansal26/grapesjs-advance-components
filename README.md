@@ -49,14 +49,13 @@ More components and blocks will be added soon with more advance features.
 | 6.  | Image                                                                                               | image-block         |
 | 7.  | Video                                                                                               | video-block         |
 | 8.  | Progress Bar                                                                                        | progress-bar-block  |
-| 9.  | Input                                                                                               | input-block         |
+| 9.  | Input (color, date, datetime-local, email, file, hidden, image, month, number, password, radio, range, reset, search, submit, tel, text, time, url, week, checkbox)                                                                                              | input-block         |
 | 10. | Dropdown                                                                                            | dropdown-block      |
 | 11. | Textarea                                                                                            | textarea-block      |
 | 12. | Map                                                                                                 | map-block           |
 | 13. | Divider                                                                                             | divider-block       |
 | 14. | Button                                                                                              | button-block        |
 | 15. | Slider                                                                                              | slider-block        |
-Supported Input types (color, date, datetime-local, email, file, hidden, image, month, number, password, radio, range, reset, search, submit, tel, text, time, url, week, checkbox)
 
 
 
