@@ -1,8 +1,8 @@
 # Grapesjs Advance Components
 
-[DEMO](##)
-> **Provide a live demo of your plugin**
-https://jsfiddle.net/vaibhavbansal26/jdxvcr3y/2/
+[DEMO](https://jsfiddle.net/vaibhavbansal26/jdxvcr3y/2/)
+<!-- > **Provide a live demo of your plugin** -->
+
 
 
 ### HTML
@@ -37,16 +37,91 @@ body, html {
 ## Summary
 
 * Plugin name: `grapesjs-advance-components`
-More components and block will be added soon.
-* Components
-    * `Faq`
-    * `Heading`
-    * `Paragraph`
-* Blocks
-    * `faq-block`
-    * `heading-block`
-    * `paragraph-block`
-    * ...
+More components and blocks will be added soon with more advance features.
+```html
+<table>
+  <tr>
+    <th>No.</th>
+    <th>Component</th>
+    <th>Block</th>
+  </tr>
+  <tr>
+    <td>1.</td>
+    <td>Faq</td>
+    <td>faq-block</td>
+  </tr>
+   <tr>
+    <td>2.</td>
+    <td>Heading (h1,h2,h3,h4,h5,h6)</td>
+    <td>heading-block</td>
+  </tr>
+   <tr>
+    <td>3.</td>
+    <td>Paragraph</td>
+    <td>paragraph-block</td>
+  </tr>
+   <tr>
+    <td>4.</td>
+    <td>List</td>
+    <td>list-block</td>
+  </tr>
+   <tr>
+    <td>5.</td>
+    <td>Link</td>
+    <td>link-block</td>
+  </tr>
+   <tr>
+    <td>6.</td>
+    <td>Image</td>
+    <td>image-block</td>
+  </tr>
+   <tr>
+    <td>7.</td>
+    <td>Video</td>
+    <td>video-block</td>
+  </tr>
+   <tr>
+    <td>8.</td>
+    <td>Progress Bar</td>
+    <td>progress-bar-block</td>
+  </tr>
+   <tr>
+    <td>9.</td>
+    <td>Input (color,date,datetime-local,email,file,hidden,image,month,number,password,radio,range,reset,search,submit,tel,text,time,url,week,checkbox)</td>
+    <td>input-block</td>
+  </tr>
+   <tr>
+    <td>10.</td>
+    <td>Dropdown</td>
+    <td>dropdown-block</td>
+  </tr>
+   <tr>
+    <td>11.</td>
+    <td>Textarea</td>
+    <td>textarea-block</td>
+  </tr>
+   <tr>
+    <td>12.</td>
+    <td>Map</td>
+    <td>map-block</td>
+  </tr>
+   <tr>
+    <td>13.</td>
+    <td>Divider</td>
+    <td>divider-block</td>
+  </tr>
+   <tr>
+    <td>14.</td>
+    <td>Button</td>
+    <td>button-block</td>
+  </tr>
+   <tr>
+    <td>14.</td>
+    <td>Slider</td>
+    <td>slider-block</td>
+  </tr>
+  </table>
+```
 
 
 
@@ -95,10 +170,9 @@ const editor = grapesjs.init({
   plugins: [plugin],
   pluginsOpts: {
     [plugin]: { 
-      components:[
-         components:[ {
+          components:[ {
               visible:true,
-              label:'FAQ',
+              label:'Faq',
               name:'faq',
               category:'Custom',
               type:'text',
@@ -106,22 +180,181 @@ const editor = grapesjs.init({
             },
             {
               visible:true,
-              label:'Heading',
+              label:'Heading 6',
               name:'heading',
-              category:'Custom',
+              category:'Text',
               type:'text',
               componentType:'heading',
-            }
+              headingType:'h6'
+            },
+            {
+              visible:true,
+              label:'Heading 1',
+              name:'heading',
+              category:'Text',
+              type:'text',
+              componentType:'heading',
+              headingType:'h1'
+            },
             {
               visible:true,
               label:'Paragraph',
               name:'paragraph',
-              category:'Custom',
+              category:'Text',
               type:'text',
               componentType:'paragraph',
+            },
+            {
+              visible:true,
+              label:'List',
+              name:'list',
+              category:'Text',
+              type:'text',
+              componentType:'list',
+            },
+            {
+              visible:true,
+              label:'Link',
+              name:'link',
+              category:'Text',
+              type:'link',
+              componentType:'link',
+            },
+            {
+              visible:true,
+              label:'Image',
+              name:'image',
+              category:'Media',
+              type:'image',
+              componentType:'image',
+            },
+            {
+              visible:true,
+              label:'Video',
+              name:'video',
+              category:'Media',
+              type:'video',
+              componentType:'video',
+            },
+            {
+              visible:true,
+              label:'Divider',
+              name:'divider',
+              category:'Custom',
+              type:'divider',
+              componentType:'divider',
+            },
+            {
+            visible:true,
+            label:'Checkbox',
+            name:'Checkbox',
+            category:'Form',
+            type:'input',
+            componentType:'inputElement',
+            formElement:{
+              type:'checkbox',
+              name:'checkbox1',
+              label:'Checkbox',
+              placeholder:'Pick the correct option'
             }
+          },
+          {
+            visible:true,
+            label:'Radio',
+            name:'Radio',
+            category:'Form',
+            type:'input',
+            componentType:'inputElement',
+            formElement:{
+              type:'radio',
+              name:'radio1',
+              label:'Radio',
+              placeholder:'Pick the correct option'
+            }
+          },
+          {
+            visible:true,
+            label:'Input',
+            name:'Input',
+            category:'Form',
+            type:'input',
+            componentType:'inputElement',
+            formElement:{
+              type:'text',
+              name:'input1',
+              label:'Textfield',
+              placeholder:'Enter your text...',
+            }
+          },
+          {
+            visible:true,
+            label:'Select',
+            name:'Dropdown',
+            category:'Form',
+            type:'dropdown',
+            componentType:'dropdown',
+            formElement:{
+              type:'text',
+              name:'select1',
+              label:'Dropdown',
+              options:[
+                {label:'Option 1',value:'option1'},
+                {label:'Option 2',value:'option2'},
+                {label:'Option 3',value:'option3'}
+              ]
+            }
+          },
+          {
+            visible:true,
+            label:'Textarea',
+            name:'Textarea',
+            category:'Form',
+            type:'textarea',
+            componentType:'textarea',
+            formElement:{
+              type:'text',
+              name:'select1',
+              label:'Textarea',
+              placeholder:'Enter your text...',
+              
+            }
+          },
+          {
+            visible:true,
+            label:'Map',
+            name:'map',
+            category:'Custom',
+            type:'map',
+            componentType:'map',
+          },
+          {
+            visible:true,
+            label:'Progress Bar',
+            name:'Progress Bar',
+            category:'Custom',
+            type:'progress-bar',
+            componentType:'progress-bar',
+          },
+          {
+            visible:true,
+            label:'Button',
+            name:'button',
+            category:'Custom',
+            type:'button',
+            componentType:'button',
+            buttonElement:{
+              buttonText:'Submit Now!'
+            }
+          },
+          {
+            visible:true,
+            label:'Slider',
+            name:'slider',
+            category:'Custom',
+            type:'slider',
+            componentType:'slider',
+          },
           ]
-      ]
      }
   }
   // or
