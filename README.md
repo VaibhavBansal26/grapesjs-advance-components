@@ -39,88 +39,24 @@ body, html {
 * Plugin name: `grapesjs-advance-components`
 More components and blocks will be added soon with more advance features.
 ```html
-<table>
-  <tr>
-    <th>No.</th>
-    <th>Component</th>
-    <th>Block</th>
-  </tr>
-  <tr>
-    <td>1.</td>
-    <td>Faq</td>
-    <td>faq-block</td>
-  </tr>
-   <tr>
-    <td>2.</td>
-    <td>Heading (h1,h2,h3,h4,h5,h6)</td>
-    <td>heading-block</td>
-  </tr>
-   <tr>
-    <td>3.</td>
-    <td>Paragraph</td>
-    <td>paragraph-block</td>
-  </tr>
-   <tr>
-    <td>4.</td>
-    <td>List</td>
-    <td>list-block</td>
-  </tr>
-   <tr>
-    <td>5.</td>
-    <td>Link</td>
-    <td>link-block</td>
-  </tr>
-   <tr>
-    <td>6.</td>
-    <td>Image</td>
-    <td>image-block</td>
-  </tr>
-   <tr>
-    <td>7.</td>
-    <td>Video</td>
-    <td>video-block</td>
-  </tr>
-   <tr>
-    <td>8.</td>
-    <td>Progress Bar</td>
-    <td>progress-bar-block</td>
-  </tr>
-   <tr>
-    <td>9.</td>
-    <td>Input (color,date,datetime-local,email,file,hidden,image,month,number,password,radio,range,reset,search,submit,tel,text,time,url,week,checkbox)</td>
-    <td>input-block</td>
-  </tr>
-   <tr>
-    <td>10.</td>
-    <td>Dropdown</td>
-    <td>dropdown-block</td>
-  </tr>
-   <tr>
-    <td>11.</td>
-    <td>Textarea</td>
-    <td>textarea-block</td>
-  </tr>
-   <tr>
-    <td>12.</td>
-    <td>Map</td>
-    <td>map-block</td>
-  </tr>
-   <tr>
-    <td>13.</td>
-    <td>Divider</td>
-    <td>divider-block</td>
-  </tr>
-   <tr>
-    <td>14.</td>
-    <td>Button</td>
-    <td>button-block</td>
-  </tr>
-   <tr>
-    <td>14.</td>
-    <td>Slider</td>
-    <td>slider-block</td>
-  </tr>
-  </table>
+| No. | Component                                                                                           | Block               |
+|-----|-----------------------------------------------------------------------------------------------------|---------------------|
+| 1.  | Faq                                                                                                 | faq-block           |
+| 2.  | Heading (h1, h2, h3, h4, h5, h6)                                                                  | heading-block       |
+| 3.  | Paragraph                                                                                           | paragraph-block     |
+| 4.  | List                                                                                                | list-block          |
+| 5.  | Link                                                                                                | link-block          |
+| 6.  | Image                                                                                               | image-block         |
+| 7.  | Video                                                                                               | video-block         |
+| 8.  | Progress Bar                                                                                        | progress-bar-block  |
+| 9.  | Input (color, date, datetime-local, email, file, hidden, image, month, number, password, radio, range, reset, search, submit, tel, text, time, url, week, checkbox) | input-block         |
+| 10. | Dropdown                                                                                            | dropdown-block      |
+| 11. | Textarea                                                                                            | textarea-block      |
+| 12. | Map                                                                                                | map-block           |
+| 13. | Divider                                                                                            | divider-block       |
+| 14. | Button                                                                                              | button-block        |
+| 15. | Slider                                                                                              | slider-block        |
+
 ```
 
 
