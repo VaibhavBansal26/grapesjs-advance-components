@@ -38,7 +38,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "grapesjs": "^0.22.16",
+    "grapesjs": "^0.23.8",
     "grapesjs-advance-components": "^2.0.0",
     "jsdom": "^25.0.0"
   },

@@ -67,7 +67,7 @@
     "grapesjs": ">=0.21.0"
   },
   "devDependencies": {
-    "grapesjs": "^0.22.0"
+    "grapesjs": "^0.23.8"
   },
   "engines": {
     "node": ">=18"
