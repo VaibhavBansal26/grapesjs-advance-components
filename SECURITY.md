@@ -6,20 +6,22 @@ Please report security issues privately through GitHub: **Security → Report a 
 
 ## What is in scope
 
-- Secrets or keys written to generated output, `project.json`, `aac.json`, or logs
-- Bypasses of the output scanner (`aac audit`, the gate in `generate`, `build`, `edit` and `serve`)
-- Authentication, origin or path-confinement bypasses in `aac edit` and `aac serve`
+Both packages in this repository: `grapesjs-advance-components` (the browser plugin) and `promptsite` (the CLI and API server).
+
+- Secrets or keys written to generated output, `project.json`, `promptsite.json`, or logs
+- Bypasses of the output scanner (`promptsite audit`, the gate in `generate`, `build`, `edit` and `serve`)
+- Authentication, origin or path-confinement bypasses in `promptsite edit` and `promptsite serve`
 - XSS through generated markup, form blocks, the checkout button, or sanitizer bypasses for AI output
 
 ## How the package is built to avoid leaks
 
 | Layer | What it does |
 |---|---|
-| Keys stay in the environment | `ANTHROPIC_API_KEY` and `AAC_API_TOKEN` are read from env, never from flags, never written to disk or sent to a browser |
+| Keys stay in the environment | `ANTHROPIC_API_KEY` and `PROMPTSITE_API_TOKEN` are read from env, never from flags, never written to disk or sent to a browser |
 | Fail-closed output scan | A secret-shaped value or exploitable markup in anything about to be written stops the run (`422` over the API); findings are shown redacted |
 | Log redaction | Errors are stripped of key formats and of the exact values of the keys in use before they reach the terminal |
 | Strict CSP | Exports ship a `_headers` file: no inline script or style, no `unsafe-eval`, `connect-src` limited to the form endpoint |
-| Closed-by-default servers | `aac edit` and `aac serve` bind to loopback; `serve` needs a 24+ character bearer token (constant-time compare), throttles failures, rejects browser requests, caps body size, jobs and hourly volume, and confines every site to one folder |
+| Closed-by-default servers | `promptsite edit` and `promptsite serve` bind to loopback; `serve` needs a 24+ character bearer token (constant-time compare), throttles failures, rejects browser requests, caps body size, jobs and hourly volume, and confines every site to one folder |
 | Model output is untrusted | The editor's AI results go through an allowlist sanitizer; the CLI never inserts model text as HTML (it escapes it) |
 
 ## What cannot be promised
