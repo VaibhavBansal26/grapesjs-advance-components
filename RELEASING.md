@@ -15,7 +15,7 @@ The `promptsite` CLI depends on the plugin, so the plugin is always published fi
 
 Publishing uses **npm trusted publishing** (OIDC), so no npm token is stored in GitHub. That only works for packages that already exist on npm, so `promptsite` needs one manual bootstrap publish.
 
-Both packages are forced to their first versions in `release-please-config.json` with `release-as`: the plugin goes 1.0.7 → **2.0.0**, `promptsite` goes 0.0.1 → **0.1.0**.
+Both packages are forced to their first versions in `release-please-config.json` with `release-as`: the plugin goes 1.0.7 → **2.2.0**, `promptsite` goes 0.0.1 → **0.1.0**. (2.0.0 and 2.1.0 were published automatically from the first two merges, before the packages were split, so the real release starts at 2.2.0. Once 2.2.0 is out, remove both `release-as` lines so versions follow the commits.)
 
 1. **Bootstrap `promptsite` by hand** (once, from your machine):
    ```bash
