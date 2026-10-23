@@ -1,9 +1,9 @@
 name: Release
 
-# Every push to main is tested, then released automatically from its Conventional Commit messages:
-#   fix: …            -> patch    feat: …          -> minor
-#   feat!: … or a "BREAKING CHANGE:" footer -> major
-# Commits like docs:, chore:, test: do not release. Version and notes come from git tags and GitHub Releases.
+# Every push to main is tested. release-please then keeps one Release PR per package up to date,
+# built from Conventional Commits (fix = patch, feat = minor, feat! or BREAKING CHANGE = major).
+# MERGING a Release PR is what tags, creates the GitHub release and publishes to npm.
+# See RELEASING.md.
 
 on:
   push:
@@ -13,42 +13,64 @@ concurrency:
   group: release
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build
       - run: npm run typecheck
       - run: npm test
-      - run: npm run build
 
-  release:
+  release-please:
     needs: test
     runs-on: ubuntu-latest
     permissions:
-      contents: write        # tags and GitHub releases
+      contents: write
       issues: write
       pull-requests: write
-      id-token: write        # npm provenance
+    outputs:
+      plugin: ${{ steps.rp.outputs['packages/grapesjs-advance-components--release_created'] }}
+      cli: ${{ steps.rp.outputs['packages/promptsite--release_created'] }}
     steps:
-      - uses: actions/checkout@v4
+      - id: rp
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5
         with:
-          fetch-depth: 0     # semantic-release needs the full history and tags
-          persist-credentials: false
-      - uses: actions/setup-node@v4
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish:
+    needs: release-please
+    if: needs.release-please.outputs.plugin == 'true' || needs.release-please.outputs.cli == 'true'
+    runs-on: ubuntu-latest
+    # The environment name is part of the npm trusted-publisher configuration (see RELEASING.md),
+    # and lets you require a reviewer before anything is published.
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write          # npm trusted publishing (OIDC): no npm token is stored anywhere
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
-          cache: npm
           registry-url: https://registry.npmjs.org
+          cache: npm
+      - run: npm i -g npm@latest   # trusted publishing needs a recent npm
       - run: npm ci
       - run: npm run build
-      - run: npx semantic-release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      # Order matters: the CLI depends on the plugin, so the plugin goes first.
+      - name: Publish grapesjs-advance-components
+        if: needs.release-please.outputs.plugin == 'true'
+        run: npm publish -w grapesjs-advance-components --provenance --access public
+      - name: Publish promptsite
+        if: needs.release-please.outputs.cli == 'true'
+        run: npm publish -w promptsite --provenance --access public

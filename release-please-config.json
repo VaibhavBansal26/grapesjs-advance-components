@@ -1,0 +1,18 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separate-pull-requests": true,
+  "bootstrap-sha": "75bcfe429d3fdff95a9e86fe8a9963d78d84ef30",
+  "plugins": ["node-workspace"],
+  "packages": {
+    "packages/grapesjs-advance-components": {
+      "release-type": "node",
+      "component": "grapesjs-advance-components",
+      "release-as": "2.0.0"
+    },
+    "packages/promptsite": {
+      "release-type": "node",
+      "component": "promptsite",
+      "release-as": "0.1.0"
+    }
+  }
+}

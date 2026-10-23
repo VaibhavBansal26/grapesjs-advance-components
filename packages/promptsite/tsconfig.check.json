@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": { "grapesjs-advance-components": ["../grapesjs-advance-components/src/index.ts"] }
+  }
+}

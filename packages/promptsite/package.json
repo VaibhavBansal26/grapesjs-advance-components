@@ -1,0 +1,52 @@
+{
+  "name": "promptsite",
+  "version": "0.0.1",
+  "description": "Generate a multi-page website from one sentence with your own model, polish it in a visual editor, audit it for leaks, and export plain static files.",
+  "type": "module",
+  "bin": {
+    "promptsite": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "examples/n8n"
+  ],
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit -p tsconfig.check.json",
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VaibhavBansal26/grapesjs-advance-components.git",
+    "directory": "packages/promptsite"
+  },
+  "homepage": "https://github.com/VaibhavBansal26/grapesjs-advance-components/tree/main/packages/promptsite#readme",
+  "bugs": {
+    "url": "https://github.com/VaibhavBansal26/grapesjs-advance-components/issues"
+  },
+  "keywords": [
+    "ai",
+    "cli",
+    "generator",
+    "grapesjs",
+    "n8n",
+    "site-generator",
+    "static-site",
+    "website"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "grapesjs": "^0.22.16",
+    "grapesjs-advance-components": "^2.0.0",
+    "jsdom": "^25.0.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

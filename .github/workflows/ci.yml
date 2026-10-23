@@ -5,8 +5,12 @@ on:
     branches-ignore: [main]   # main is tested by the release workflow
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  plugin:
+    name: plugin (node ${{ matrix.node }}, grapesjs ${{ matrix.grapesjs }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -14,29 +18,49 @@ jobs:
         node: [18, 20, 22]
         grapesjs: [0.21.13, 0.22.16, latest]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
       - run: npm i --no-save grapesjs@${{ matrix.grapesjs }}
+      - run: npm run typecheck -w grapesjs-advance-components
+      - run: npm test -w grapesjs-advance-components
+      - run: npm run build -w grapesjs-advance-components
+
+  cli:
+    name: promptsite (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm run build          # the plugin first, then the CLI
       - run: npm run typecheck
       - run: npm test
-      - run: npm run build
 
   security:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Covers the CLI's runtime dependencies, including jsdom's tree.
       - run: npm audit --omit=dev --audit-level=high
       - run: npm run build
-      # Dogfood: the repo's own docs, examples and workflow templates must pass the scanner.
-      - run: node dist/cli.js audit src
-      - run: node dist/cli.js audit docs
-      - run: node dist/cli.js audit examples
+      # Dogfood: our own source, docs and examples must pass the scanner.
+      - run: node packages/promptsite/dist/cli.js audit packages/grapesjs-advance-components/src
+      - run: node packages/promptsite/dist/cli.js audit packages/promptsite/src
+      - run: node packages/promptsite/dist/cli.js audit packages/promptsite/examples
+      - run: node packages/promptsite/dist/cli.js audit docs
