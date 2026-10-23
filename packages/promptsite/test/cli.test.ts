@@ -67,7 +67,8 @@ describe('generateSite', () => {
   it('uses checkout buttons when a payment link is given, contact links otherwise', async () => {
     const withLink = await gen({ paymentLink: 'https://buy.stripe.com/test_abc' });
     expect(withLink.files['pricing.html']).toContain('aac-checkout');
-    expect(withLink.files['pricing.js']).toContain('https://buy.stripe.com/test_abc');
+    expect(withLink.files['pricing.html']).toContain('data-url="https://buy.stripe.com/test_abc"'); // the setting lives in the markup
+    expect(withLink.files['pricing.js']).toContain('aac:checkout');
     const without = await gen();
     expect(without.files['pricing.html']).not.toContain('aac-checkout');
     expect(without.files['pricing.html']).toContain('href="contact.html"');
@@ -139,7 +140,7 @@ describe('generateSite', () => {
     const again = await exportProject(site.project, { formEndpoint: '/api/contact', paymentLink: 'https://buy.stripe.com/test_abc' });
     expect(Object.keys(again).sort()).toEqual(Object.keys(site.files).sort());
     expect(again['contact.html']).toContain('action="/api/contact"');
-    expect(again['pricing.js']).toContain('https://buy.stripe.com/test_abc');
+    expect(again['pricing.html']).toContain('data-url="https://buy.stripe.com/test_abc"');
   });
 });
 
@@ -245,7 +246,8 @@ describe('promptsite commands', () => {
     const home = await readFile(join(out, 'public', 'index.html'), 'utf8');
     expect(home).toContain('<title>Wick &amp; Co</title>');
     expect(home).toMatch(/<meta name="description"/);
-    expect(await readFile(join(out, 'public', 'index.js'), 'utf8')).toContain('https://buy.stripe.com/test_1');
+    expect(await readFile(join(out, 'public', 'index.html'), 'utf8')).toContain('data-url="https://buy.stripe.com/test_1"');
+    expect(await readFile(join(out, 'public', 'index.js'), 'utf8')).toContain('aac:checkout');
   });
 
   it('refuses to overwrite a project without --force', async () => {

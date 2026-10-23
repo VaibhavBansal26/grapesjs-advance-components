@@ -1,6 +1,7 @@
 import grapesjs, { type Editor } from 'grapesjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import plugin, { type PluginOptions } from '../src';
+import { progressBar } from '../src/builtin';
 
 let editors: Editor[] = [];
 
@@ -82,29 +83,27 @@ describe('progress bar', () => {
   it('drives the inner bar from traits and keeps ARIA in sync', () => {
     const editor = make();
     const [bar] = editor.addComponents({ type: 'aac-progress-bar' });
-    bar!.set('percentage', 40);
-    bar!.set('color', '#ff0000');
-    const html = bar!.toHTML();
-    expect(html).toContain('aria-valuenow="40"');
-    const inner = bar!.components().at(0)!;
-    expect(inner.getStyle()).toMatchObject({ width: '40%', 'background-color': '#ff0000' });
+    progressBar.set(bar!, 'percentage', 40);
+    progressBar.set(bar!, 'color', '#ff0000');
+    expect(bar!.toHTML()).toContain('aria-valuenow="40"');
+    expect(bar!.components().at(0)!.getStyle()).toMatchObject({ width: '40%', 'background-color': '#ff0000' });
   });
 
   it('keeps the themed colour until a colour is chosen', () => {
     const editor = make();
     const [bar] = editor.addComponents({ type: 'aac-progress-bar' });
-    bar!.set('percentage', 30);
+    progressBar.set(bar!, 'percentage', 30);
     expect(bar!.components().at(0)!.getStyle()).toEqual({ width: '30%' });
-    bar!.set('color', '#ff0000');
+    progressBar.set(bar!, 'color', '#ff0000');
     expect(bar!.components().at(0)!.getStyle()).toMatchObject({ 'background-color': '#ff0000' });
-    bar!.set('color', '');
+    progressBar.set(bar!, 'color', '');
     expect(bar!.components().at(0)!.getStyle()).toEqual({ width: '30%' });
   });
 
   it('clamps out-of-range values', () => {
     const editor = make();
     const [bar] = editor.addComponents({ type: 'aac-progress-bar' });
-    bar!.set('percentage', 250);
+    progressBar.set(bar!, 'percentage', 250);
     expect(bar!.components().at(0)!.getStyle()).toMatchObject({ width: '100%' });
   });
 

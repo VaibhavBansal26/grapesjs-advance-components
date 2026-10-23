@@ -14,6 +14,7 @@ export type * from './types';
 export { sanitizeHtml, createFetchGenerator, runAiGeneration, DEFAULT_SYSTEM } from './ai';
 export { defaultComponents } from './defaults';
 export { baseCss } from './styles';
+export * from './define';
 export { escapeHtml } from './utils';
 export { CHECKOUT_TYPE, DEFAULT_ALLOWED_HOSTS } from './payments';
 export { scanFiles, assertSafe, redactSecrets, formatFindings, SecurityError, RULE_IDS } from './security/scan';
@@ -35,6 +36,7 @@ export default function plugin(editor: Editor, opts: PluginOptions = {}) {
   editor.I18n.addMessages({ en, ...opts.i18n });
 
   if (opts.injectStyles !== false) editor.Css.addRules(baseCss);
+  opts.custom?.forEach((definition) => definition.install(editor));
   if (opts.ai) loadAi(editor, opts.ai);
   if (opts.pages !== false) loadPages(editor, typeof opts.pages === 'object' ? opts.pages : {});
 }

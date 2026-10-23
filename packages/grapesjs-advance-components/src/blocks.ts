@@ -1,8 +1,9 @@
 import type { BlockProperties, Editor } from 'grapesjs';
 import type { ComponentOption } from './types';
 import { FORM_TYPE } from './forms';
-import { CHECKOUT_TYPE } from './payments';
+import { CHECKOUT_TYPE, checkoutButton, hero, progressBar, quote } from './builtin';
 import { escapeHtml, nextId } from './utils';
+import { ICONS, blockLabel } from './ui';
 
 const INPUT_TYPES = [
   'color', 'date', 'datetime-local', 'email', 'file', 'hidden', 'image', 'month', 'number',
@@ -10,34 +11,31 @@ const INPUT_TYPES = [
 ];
 const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
 
-// Inline SVG so the blocks don't depend on Font Awesome being loaded in the host page.
-const icon = (path: string) =>
-  `<svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${path}</svg>`;
+const checkoutValues = (ce: NonNullable<ComponentOption['checkoutElement']>) => ({
+  mode: ce.mode ?? 'link',
+  url: ce.url ?? '',
+  endpoint: ce.endpoint ?? '',
+  priceId: ce.priceId ?? '',
+  quantity: ce.quantity ?? 1,
+});
 
-const ICONS = {
-  text: icon('<path d="M4 6h16M4 12h16M4 18h10"/>'),
-  heading: icon('<path d="M6 4v16M18 4v16M6 12h12"/>'),
-  list: icon('<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/>'),
-  link: icon('<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/>'),
-  image: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.5"/><path d="m21 16-5-5-8 8"/>'),
-  video: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m10 9 5 3-5 3z"/>'),
-  divider: icon('<path d="M4 12h16"/>'),
-  input: icon('<rect x="3" y="8" width="18" height="8" rx="2"/><path d="M7 12h4"/>'),
-  select: icon('<rect x="3" y="7" width="18" height="10" rx="2"/><path d="m15 11 2 2 2-2"/>'),
-  map: icon('<path d="M12 21s7-6.2 7-11a7 7 0 0 0-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/>'),
-  progress: icon('<rect x="3" y="10" width="18" height="4" rx="2"/><path d="M3 12h10"/>'),
-  button: icon('<rect x="3" y="8" width="18" height="8" rx="4"/>'),
-  slider: icon('<rect x="6" y="6" width="12" height="12" rx="2"/><path d="m3 10-1 2 1 2M21 10l1 2-1 2"/>'),
-  layout: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/>'),
-  card: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>'),
-  mail: icon('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>'),
-  hero: icon('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 10h10M9 14h6"/>'),
-  grid: icon('<rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="13" width="7" height="7" rx="1"/><rect x="14" y="13" width="7" height="7" rx="1"/>'),
-  quote: icon('<path d="M8 8H5v5h3v3l3-3V8zM18 8h-3v5h3v3l3-3V8z"/>'),
-};
-
-const blockLabel = (svg: string, text: string) =>
-  `${svg}<div class="gjs-block-label">${escapeHtml(text)}</div>`;
+/** A checkout button for use inside other blocks. Its settings are the same `data-*` attributes the trait panel edits. */
+function checkoutComponent(ce: NonNullable<ComponentOption['checkoutElement']>, fallbackText: string) {
+  const v = checkoutValues(ce);
+  return {
+    type: CHECKOUT_TYPE,
+    attributes: {
+      type: 'button',
+      class: 'aac-button aac-checkout',
+      'data-mode': v.mode,
+      'data-url': v.url,
+      'data-endpoint': v.endpoint,
+      'data-price-id': v.priceId,
+      'data-quantity': String(v.quantity),
+    },
+    components: escapeHtml(ce.buttonText ?? fallbackText),
+  };
+}
 
 type Entry = [id: string, props: BlockProperties];
 
@@ -100,11 +98,6 @@ function buildEntries(c: ComponentOption): Entry[] {
         }),
       ];
 
-    case 'quote':
-      return [
-        mk('quote-block', ICONS.quote, `<blockquote class="aac-quote">A short, memorable quote goes here.<cite>— Someone Notable</cite></blockquote>`),
-      ];
-
     case 'list':
       return [
         mk('list-block', ICONS.list, {
@@ -127,9 +120,6 @@ function buildEntries(c: ComponentOption): Entry[] {
 
     case 'map':
       return [mk('map-block', ICONS.map, { type: 'map' })];
-
-    case 'progress-bar':
-      return [mk('progress-bar-block', ICONS.progress, { type: 'aac-progress-bar' })];
 
     case 'button':
       return [
@@ -174,11 +164,6 @@ function buildEntries(c: ComponentOption): Entry[] {
       return [mk('newsletter-block', ICONS.mail, formContent({ successMessage: 'You are subscribed. Thank you!', ...fa }, html))];
     }
 
-    case 'hero':
-      return [
-        mk('hero-block', ICONS.hero, `<section class="aac-hero"><h1>A headline that says what you do</h1><p>One or two sentences that explain who it is for and why it is worth their time.</p><div class="aac-hero-actions"><a class="aac-button" href="#">Get started</a><a class="aac-button aac-button--outline" href="#">Learn more</a></div></section>`),
-      ];
-
     case 'features':
       return [
         mk('features-block', ICONS.grid, `<section class="aac-features">${['Fast to start', 'Easy to change', 'Built to last']
@@ -190,21 +175,6 @@ function buildEntries(c: ComponentOption): Entry[] {
       return [
         mk('cta-block', ICONS.hero, `<section class="aac-cta"><h2>Ready to get started?</h2><p>Tell people what happens next.</p><a class="aac-button" href="#">Get in touch</a></section>`),
       ];
-
-    case 'checkout': {
-      const ce = c.checkoutElement ?? {};
-      return [
-        mk('checkout-button-block', ICONS.card, {
-          type: CHECKOUT_TYPE,
-          content: ce.buttonText ?? 'Buy now',
-          mode: ce.mode ?? 'link',
-          url: ce.url ?? '',
-          endpoint: ce.endpoint ?? '',
-          priceId: ce.priceId ?? '',
-          quantity: ce.quantity ?? 1,
-        }),
-      ];
-    }
 
     case 'pricing': {
       const ce = c.checkoutElement ?? {};
@@ -219,7 +189,7 @@ function buildEntries(c: ComponentOption): Entry[] {
               tagName: 'ul',
               components: ['Unlimited projects', 'Priority support', 'Cancel anytime'].map((t) => ({ type: 'text', tagName: 'li', content: t })),
             },
-            { type: CHECKOUT_TYPE, content: ce.buttonText ?? 'Get started', mode: ce.mode ?? 'link', url: ce.url ?? '', endpoint: ce.endpoint ?? '', priceId: ce.priceId ?? '' },
+            checkoutComponent(ce, 'Get started'),
           ],
         }),
       ];
@@ -272,6 +242,20 @@ export function loadBlocks(editor: Editor, components: ComponentOption[]) {
   const bm = editor.Blocks;
   components.forEach((c) => {
     if (c.visible === false) return;
+    const as = { label: c.label, category: c.category };
+    switch (c.componentType) {
+      // Built with defineComponent: the definition makes its own block.
+      case 'progress-bar':
+        return progressBar.installBlock(editor, as);
+      case 'quote':
+        return quote.installBlock(editor, as);
+      case 'hero':
+        return hero.installBlock(editor, as);
+      case 'checkout': {
+        const ce = c.checkoutElement ?? {};
+        return checkoutButton().installBlock(editor, { ...as, values: checkoutValues(ce), content: escapeHtml(ce.buttonText ?? 'Buy now') });
+      }
+    }
     buildEntries(c).forEach(([id, props]) => {
       if (!bm.get(id)) bm.add(id, props);
     });

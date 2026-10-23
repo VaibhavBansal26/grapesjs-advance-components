@@ -1,4 +1,5 @@
 import type { Editor } from 'grapesjs';
+import type { ComponentDefinition } from './define/types';
 
 export type ComponentKind =
   | 'faq'
@@ -130,6 +131,8 @@ export interface PluginOptions {
   injectStyles?: boolean;
   ai?: AiOptions;
   payments?: PaymentsOptions;
+  /** Your own components, made with `defineComponent`. Each is installed with its block and CSS. */
+  custom?: ComponentDefinition<any>[];
   /** Multi-page editing. `false` disables the commands and panel button. */
   pages?: boolean | PagesOptions;
 }
