@@ -236,7 +236,10 @@ export async function startApi(o: ApiOptions): Promise<{ url: string; server: Se
     server.listen(o.port, host, resolve);
   });
   const { port } = server.address() as AddressInfo;
-  return { url: `http://${host === '0.0.0.0' ? '127.0.0.1' : host}:${port}`, server, close: () => new Promise<void>((r) => server.close(() => r())) };
+  return { url: `http://${host === '0.0.0.0' ? '127.0.0.1' : host}:${port}`, server, close: () => new Promise<void>((r) => {
+      server.close(() => r());
+      server.closeAllConnections(); // a request stuck in a model call must not keep shutdown waiting
+    }) };
 }
 
 async function collectPublic(dir: string): Promise<Record<string, string> | undefined> {
