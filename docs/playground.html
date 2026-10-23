@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Playground · grapesjs-advance-components</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/grapesjs@0.22.16/dist/css/grapes.min.css">
+<style>
+  html,body{margin:0;height:100%;font-family:system-ui,sans-serif}
+  .bar{height:44px;display:flex;align-items:center;gap:16px;padding:0 16px;background:#1c1c24;color:#ececf3;font-size:.9rem}
+  .bar a{color:#a5a0ff;text-decoration:none}
+  .bar .hint{margin-left:auto;opacity:.7}
+  #gjs{height:calc(100% - 44px)}
+</style>
+</head>
+<body>
+<div class="bar">
+  <strong>Playground</strong>
+  <a href="index.html">&larr; Docs</a>
+  <span class="hint">Select an element and click &#10024; to try AI (demo provider, no network). &#128196; manages pages.</span>
+</div>
+<div id="gjs"></div>
+<script src="https://cdn.jsdelivr.net/npm/grapesjs@0.22.16/dist/grapes.min.js"></script>
+<script src="dist/index.global.js"></script>
+<script>
+  // Demo provider: runs in the page, no key, no network. In your app use createFetchGenerator('/api/ai').
+  const demoModel = async ({ prompt, mode }) => {
+    await new Promise((r) => setTimeout(r, 500));
+    const safe = prompt.replace(/[<&]/g, (c) => ({ '<': '&lt;', '&': '&amp;' }[c]));
+    return '<section style="padding:24px"><h2>' + safe + '</h2><p>(' + mode +
+      ' mode) This text came from the demo provider. Wire up a real model with <code>ai.generate</code>.</p></section>';
+  };
+
+  window.editor = grapesjs.init({
+    container: '#gjs',
+    height: '100%',
+    storageManager: { type: 'local', autosave: true, stepsBeforeSave: 1, id: 'aac-playground-' },
+    plugins: ['grapesjs-advance-components'],
+    pluginsOpts: {
+      'grapesjs-advance-components': {
+        ai: { generate: demoModel },
+        components: [
+          { label: 'Buy', name: 'checkout', category: 'Commerce', componentType: 'checkout',
+            checkoutElement: { mode: 'link', url: 'https://buy.stripe.com/test_replace_me', buttonText: 'Buy now' } },
+        ],
+      },
+    },
+    components: '<header class="aac-header"><strong>Acme</strong><nav><a href="page:index">Home</a><a href="page:pricing">Pricing</a></nav></header>' +
+      '<h1 style="padding:24px 24px 0">Build pages with blocks</h1>' +
+      '<p style="padding:0 24px">Drag blocks from the right panel, edit them, add pages and download the site.</p>',
+  });
+
+  editor.onReady(() => {
+    if (editor.Pages.getAll().length === 1) {
+      editor.Pages.getAll()[0].set('name', 'Home');
+      editor.Pages.add({ name: 'Pricing', component: '<h1 style="padding:24px">Pricing</h1>' });
+      editor.Pages.select(editor.Pages.getAll()[0]);
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+name: Release
+
+# Every push to main is tested, then released automatically from its Conventional Commit messages:
+#   fix: …            -> patch    feat: …          -> minor
+#   feat!: … or a "BREAKING CHANGE:" footer -> major
+# Commits like docs:, chore:, test: do not release. Version and notes come from git tags and GitHub Releases.
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  release:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # tags and GitHub releases
+      issues: write
+      pull-requests: write
+      id-token: write        # npm provenance
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0     # semantic-release needs the full history and tags
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - run: npm run build
+      - run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -1,26 +1,85 @@
 {
   "name": "grapesjs-advance-components",
-  "version": "1.0.7",
-  "description": "Grapesjs Advance Components",
-  "main": "dist/index.js",
+  "version": "0.0.0-development",
+  "description": "Ready-made, accessible GrapesJS blocks and components, with optional bring-your-own-model AI block generation.",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "unpkg": "./dist/index.global.js",
+  "jsdelivr": "./dist/index.global.js",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "require": {
+        "types": "./dist/index.d.cts",
+        "default": "./dist/index.cjs"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "examples/ai-server.mjs"
+  ],
+  "scripts": {
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build",
+    "docs": "npm run build && mkdir -p docs/dist && cp dist/index.global.js docs/dist/",
+    "release": "semantic-release"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/VaibhavBansal26/grapesjs-advance-components.git"
+    "url": "git+https://github.com/VaibhavBansal26/grapesjs-advance-components.git"
   },
-  "scripts": {
-    "start": "grapesjs-cli serve",
-    "build": "grapesjs-cli build",
-    "bump": "npm version patch -m 'Bump v%s'"
+  "homepage": "https://github.com/VaibhavBansal26/grapesjs-advance-components#readme",
+  "bugs": {
+    "url": "https://github.com/VaibhavBansal26/grapesjs-advance-components/issues"
   },
   "keywords": [
+    "ai",
+    "blocks",
+    "cli",
+    "components",
     "grapesjs",
-    "plugin"
+    "grapesjs-plugin",
+    "page-builder",
+    "site-generator"
   ],
-  "devDependencies": {
-    "grapesjs-cli": "^4.1.1"
-  },
   "license": "MIT",
-  "dependencies": {
-    "grapesjs": "^0.21.3"
+  "peerDependencies": {
+    "grapesjs": ">=0.21.0",
+    "jsdom": ">=22"
+  },
+  "devDependencies": {
+    "@types/jsdom": "^21.1.7",
+    "@types/node": "^20.19.43",
+    "grapesjs": "^0.22.0",
+    "jsdom": "^25.0.0",
+    "semantic-release": "^24.2.9",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "bin": {
+    "aac": "./dist/cli.js"
+  },
+  "peerDependenciesMeta": {
+    "jsdom": {
+      "optional": true
+    }
   }
 }

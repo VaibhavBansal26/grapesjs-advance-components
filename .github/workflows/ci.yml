@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [main]   # main is tested by the release workflow
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [18, 20, 22]
+        grapesjs: [0.21.13, 0.22.16, latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm i --no-save grapesjs@${{ matrix.grapesjs }}
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
