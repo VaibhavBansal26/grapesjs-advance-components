@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>grapesjs-advance-components docs</title>
+<meta name="description" content="Accessible GrapesJS blocks, Stripe checkout, multi-page export and AI block generation.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <strong>grapesjs-advance-components</strong>
+  <nav>
+    <a href="#generate">Generate</a>
+    <a href="#usecases">Use cases</a>
+    <a href="#integrate">Integrate</a>
+    <a href="playground.html">Playground</a>
+    <a href="showcase.html">Showcase</a>
+    <a href="https://www.npmjs.com/package/grapesjs-advance-components">npm</a>
+    <a href="https://github.com/VaibhavBansal26/grapesjs-advance-components">GitHub</a>
+  </nav>
+</header>
+
+<div class="layout">
+<aside class="side" aria-label="Documentation sections">
+  <div class="group">Start</div>
+  <a href="#generate">Generate from a prompt</a>
+  <a href="#usecases">What can you build?</a>
+  <a href="#install">Install</a>
+  <a href="#quickstart">Quick start</a>
+  <a href="#integrate">Integration guides</a>
+  <a href="#options">Options</a>
+  <div class="group">Blocks</div>
+  <a href="#blocks">Block reference</a>
+  <a href="#theming">Theming</a>
+  <a href="#progress">Progress bar</a>
+  <div class="group">Features</div>
+  <a href="#ai">AI generation</a>
+  <a href="#payments">Stripe checkout</a>
+  <a href="#forms">Forms</a>
+  <a href="#pages">Multi-page sites</a>
+  <div class="group">Reference</div>
+  <a href="#api">API &amp; events</a>
+  <a href="#problems">Known problems</a>
+  <a href="#security">Security</a>
+  <a href="#migrating">Migrating from v1</a>
+  <a href="#contributing">Contributing</a>
+</aside>
+
+<main>
+<h1>grapesjs-advance-components</h1>
+<p class="lead">Accessible, themeable GrapesJS blocks, plus Stripe checkout, multi-page export and AI block generation that works with any model provider.</p>
+<div class="cta">
+  <a class="btn" href="playground.html">Open the playground</a>
+  <a class="btn alt" href="#quickstart">Quick start</a>
+</div>
+
+<div class="cards">
+  <div class="card"><h3>32 blocks</h3><p>Hero, FAQ, pricing, forms, slider, header, footer and more, with no runtime dependencies.</p></div>
+  <div class="card"><h3>AI, your provider</h3><p>You supply the model call. No key in the package, output sanitized.</p></div>
+  <div class="card"><h3>Stripe checkout</h3><p>Hosted-page redirects only. Card data never touches your page.</p></div>
+  <div class="card"><h3>Prompt to site</h3><p>One command drafts a multi-page site with AI. Polish it visually, export plain files.</p></div>
+  <div class="card"><h3>Forms that submit</h3><p>Validation, honeypot, live status. Posts to your endpoint.</p></div>
+  <div class="card"><h3>Multi-page</h3><p>Page manager and a one-call export to a standalone static site (.zip).</p></div>
+</div>
+
+<h2 id="generate">Generate a whole site from a prompt</h2>
+<p>The <code>aac</code> command line tool writes a multi-page site from one sentence, lets a person polish it in the visual editor, and exports plain static files you can host anywhere.</p>
+<pre><code>npm i -D grapesjs grapesjs-advance-components jsdom
+export ANTHROPIC_API_KEY=sk-ant-...        # your own key; read from the environment, never stored
+
+npx aac generate "Family bakery in Leeds, sourdough and custom cakes, order online" \
+  --template local-business --accent "#b45309" --form-endpoint https://api.example.com/contact \
+  --out ./bakery
+
+npx aac edit ./bakery        # visual editor on http://127.0.0.1:4173 (autosaves; Publish writes ./bakery/public)</code></pre>
+<p>No key yet? <code>--provider mock</code> writes placeholder copy so you can try the whole pipeline offline.</p>
+
+<h3>What you get</h3>
+<pre><code>bakery/
+  project.json     the editable GrapesJS project (open it with `aac edit`, load it in your own editor)
+  aac.json         your settings (template, brand colour, form endpoint, payment link)
+  public/          index.html, about.html, contact.html + .css + .js: static, no framework, CSP-friendly</code></pre>
+<table>
+<tr><th>Template</th><th>Pages</th><th>For</th></tr>
+<tr><td><code>landing</code></td><td>Home, Pricing, Contact</td><td>SaaS or product: hero, benefits, testimonials, FAQ, plans</td></tr>
+<tr><td><code>local-business</code></td><td>Home, About, Contact</td><td>Shop, studio or service: hero, services, about, testimonials</td></tr>
+<tr><td><code>shop</code></td><td>Home, Contact</td><td>Products or plans with Stripe buttons, FAQ and a newsletter signup</td></tr>
+</table>
+
+<h3>How it works</h3>
+<ol>
+  <li><strong>The model writes copy, not markup.</strong> It returns JSON (headline, features, FAQ, plans…) that is validated and bounded. An unusable reply is retried once with the problem explained.</li>
+  <li><strong>Templates build the pages</strong> from this package's own blocks (hero, features, FAQ, pricing, form). Every model string is escaped by the tool, so the output is safe by construction and fully editable afterwards.</li>
+  <li><strong>You review in the editor.</strong> <code>aac edit</code> opens the project with the &#10024; button wired to the same model through the local server, so your key never reaches the browser.</li>
+  <li><strong>Export is deterministic.</strong> <code>aac build</code> re-renders <code>project.json</code> to <code>public/</code>, so CI can rebuild the site from the committed project.</li>
+</ol>
+
+<h3>Options</h3>
+<table>
+<tr><th>Flag</th><th></th></tr>
+<tr><td><code>--template</code></td><td><code>landing</code> (default), <code>local-business</code> or <code>shop</code></td></tr>
+<tr><td><code>--name</code>, <code>--accent #hex</code>, <code>--theme light|dark</code></td><td>Business name, brand colour (hover and focus shades are derived), dark pages</td></tr>
+<tr><td><code>--payment-link</code></td><td>A Stripe Payment Link. Pricing buttons become checkout buttons; without it they lead to the contact page.</td></tr>
+<tr><td><code>--form-endpoint</code></td><td>Where the contact and newsletter forms post. Without it they show a "no valid endpoint" message.</td></tr>
+<tr><td><code>--provider</code></td><td><code>anthropic</code> (default, uses <code>ANTHROPIC_API_KEY</code>), <code>endpoint</code> (your own backend via <code>--endpoint</code>, same contract as <code>createFetchGenerator</code>) or <code>mock</code></td></tr>
+<tr><td><code>--model</code></td><td>Model id (default <code>claude-sonnet-5-5</code>, or <code>AAC_MODEL</code>)</td></tr>
+<tr><td><code>--port</code>, <code>--force</code></td><td><code>edit</code> port (default 4173); overwrite an existing project</td></tr>
+</table>
+
+<h3>The local editor is locked down</h3>
+<p><code>aac edit</code> can write files and spend your API key, so it binds to <code>127.0.0.1</code> only, rejects any request whose <code>Host</code> or <code>Origin</code> is not itself (blocking DNS-rebinding and cross-site requests from other tabs), requires JSON bodies, and only publishes files named <code>[a-z0-9-].html|css|js</code> into <code>public/</code>. These rules are covered by tests.</p>
+
+<div class="note warn"><strong>What this is and is not.</strong> The copy is a draft: prices and testimonials are placeholders the tool tells you to replace, and it never invents facts you did not give it. The pipeline is tested end to end with the mock provider and a fake API server; output quality with a live model depends on the model and your brief. Pages have no images yet, and deployment is not included (<code>public/</code> is plain files for any static host). <code>jsdom</code> is an optional peer dependency needed only by <code>generate</code> and <code>build</code>.</div>
+
+<h2 id="usecases">What can you build with it?</h2>
+<p>This package is for teams that want <strong>users or staff to build web pages inside their own product</strong>. It extends <a href="https://grapesjs.com">GrapesJS</a>, so your app embeds the editor and you decide where the pages are stored and published. Six scenarios:</p>
+
+<div class="cards">
+  <div class="card"><h3>1. Customer-built pages in a SaaS</h3>
+    <p><strong>Who:</strong> booking tools, course platforms, link-in-bio and community products.<br>
+    <strong>How:</strong> embed the editor in your dashboard, save each customer's project JSON, publish the export on their subdomain.<br>
+    <strong>Uses:</strong> blocks, theming, multi-page, export.</p></div>
+  <div class="card"><h3>2. Agency site-delivery pipeline</h3>
+    <p><strong>Who:</strong> freelancers and agencies selling "your site in an hour".<br>
+    <strong>How:</strong> intake form &rarr; <code>aac generate</code> drafts the pages &rarr; a person polishes them in <code>aac edit</code> &rarr; deploy <code>public/</code>.<br>
+    <strong>Uses:</strong> the <a href="#generate">site generator</a>, forms, Stripe links.</p></div>
+  <div class="card"><h3>3. Internal campaign pages</h3>
+    <p><strong>Who:</strong> marketing teams that wait on developers for every landing page.<br>
+    <strong>How:</strong> a private editor with your brand's blocks and colours; staff can't break the design system.<br>
+    <strong>Uses:</strong> blocks, <code>--aac-*</code> theming, hide blocks you don't want.</p></div>
+  <div class="card"><h3>4. Sell from a page</h3>
+    <p><strong>Who:</strong> creators and founders with a product and no checkout backend.<br>
+    <strong>How:</strong> a pricing card whose button opens a Stripe Payment Link.<br>
+    <strong>Uses:</strong> Pricing and Checkout blocks (see <a href="#payments">Stripe checkout</a>).</p></div>
+  <div class="card"><h3>5. Programmatic pages</h3>
+    <p><strong>Who:</strong> products that need one page per city, store or listing.<br>
+    <strong>How:</strong> generate each project from data (and optionally AI copy), render on the server, publish static files.<br>
+    <strong>Uses:</strong> headless render recipe below.</p></div>
+  <div class="card"><h3>6. FAQ and help pages</h3>
+    <p><strong>Who:</strong> support teams that want an editable help centre without a CMS.<br>
+    <strong>How:</strong> the accessible FAQ accordion, headings and links, exported as static pages.<br>
+    <strong>Uses:</strong> FAQ block, multi-page.</p></div>
+</div>
+<div class="note warn"><strong>Not a fit:</strong> database-backed content, logins, or server-rendered apps. The output is static HTML, CSS and a little JavaScript. Scenarios 2 and 5 are plausible and the pieces are tested, but they are not yet proven end to end with a real model or a live Stripe account.</div>
+
+<h3>Example: agency delivery pipeline</h3>
+<pre><code># 1. from the client's intake answers
+npx aac generate "$BRIEF" --template local-business --name "$CLIENT" --accent "$BRAND" \
+  --form-endpoint "https://api.youragency.com/leads/$CLIENT" --out "sites/$CLIENT"
+
+# 2. a person reviews and edits
+npx aac edit "sites/$CLIENT"
+
+# 3. rebuild from the committed project in CI, then deploy the static files
+npx aac build "sites/$CLIENT" &amp;&amp; your-deploy-tool "sites/$CLIENT/public"</code></pre>
+
+<h2 id="install">Install</h2>
+<pre><code>npm i grapesjs grapesjs-advance-components</code></pre>
+<p><code>grapesjs</code> (&ge; 0.21) is a <strong>peer dependency</strong>: the plugin uses the editor you give it and never bundles its own copy. It is tested against 0.21, 0.22 and 0.23.</p>
+<p>From a CDN (registers itself as <code>grapesjs-advance-components</code>):</p>
+<pre><code>&lt;script src="https://unpkg.com/grapesjs"&gt;&lt;/script&gt;
+&lt;script src="https://unpkg.com/grapesjs-advance-components"&gt;&lt;/script&gt;
+&lt;script&gt;
+  grapesjs.init({ container: '#gjs', plugins: ['grapesjs-advance-components'] });
+&lt;/script&gt;</code></pre>
+
+<h2 id="quickstart">Quick start</h2>
+<pre><code>import grapesjs from 'grapesjs';
+import advanceComponents from 'grapesjs-advance-components';
+
+grapesjs.init({
+  container: '#gjs',
+  plugins: [advanceComponents],
+  pluginsOpts: {
+    [advanceComponents]: {
+      // every key is optional; see Options below
+    },
+  },
+});</code></pre>
+
+<h2 id="integrate">Integration guides</h2>
+<p>The plugin only needs a GrapesJS <code>editor</code>, so it works in any framework. The rules are the same everywhere: create the editor in the browser only, and destroy it when the component goes away.</p>
+
+<h3 id="react">React</h3>
+<p>GrapesJS also publishes an official wrapper, <a href="https://www.npmjs.com/package/@grapesjs/react"><code>@grapesjs/react</code></a>. The plain pattern below has no extra dependency.</p>
+<pre><code>import { useEffect, useRef } from 'react';
+import grapesjs from 'grapesjs';
+import 'grapesjs/dist/css/grapes.min.css';
+import advanceComponents, { createFetchGenerator } from 'grapesjs-advance-components';
+
+export function Builder({ project, onChange }) {
+  const el = useRef(null);
+
+  useEffect(() =&gt; {
+    const editor = grapesjs.init({
+      container: el.current,
+      height: '100vh',
+      storageManager: false,              // you own persistence, see "Saving and loading"
+      projectData: project,
+      plugins: [advanceComponents],
+      pluginsOpts: { [advanceComponents]: { ai: { generate: createFetchGenerator('/api/ai') } } },
+    });
+    editor.on('update', () =&gt; onChange(editor.getProjectData()));   // debounce this in real apps
+    return () =&gt; editor.destroy();       // also makes React StrictMode's double mount safe
+  }, []);
+
+  return &lt;div ref={el} /&gt;;
+}</code></pre>
+
+<h3 id="nextjs">Next.js</h3>
+<p>GrapesJS touches <code>window</code> and <code>document</code>, so it must not render on the server (otherwise: <code>window is not defined</code>). Mark the component as a client component and load it with SSR switched off:</p>
+<pre><code>// app/builder/page.jsx
+'use client';
+import dynamic from 'next/dynamic';
+const Builder = dynamic(() =&gt; import('../../components/Builder'), { ssr: false });
+export default function Page() { return &lt;Builder /&gt;; }</code></pre>
+<p>Your two API routes keep secrets on the server. The AI route is the same idea as <a href="https://github.com/VaibhavBansal26/grapesjs-advance-components/blob/main/examples/ai-server.mjs"><code>examples/ai-server.mjs</code></a>. A Stripe Checkout Session route:</p>
+<pre><code>// app/api/checkout/route.js: creates a Checkout Session and returns its hosted-page URL
+const PRICES = new Set(process.env.ALLOWED_PRICE_IDS.split(','));   // never trust a client-sent price blindly
+
+export async function POST(req) {
+  const { priceId, quantity = 1 } = await req.json();
+  if (!PRICES.has(priceId)) return Response.json({ error: 'unknown price' }, { status: 400 });
+
+  const body = new URLSearchParams({
+    mode: 'payment',
+    'line_items[0][price]': priceId,
+    'line_items[0][quantity]': String(Math.min(Math.max(Number(quantity) || 1, 1), 10)),
+    success_url: `${process.env.SITE_URL}/thanks`,
+    cancel_url: `${process.env.SITE_URL}/pricing`,
+  });
+  const res = await fetch('https://api.stripe.com/v1/checkout/sessions', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${process.env.STRIPE_SECRET_KEY}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  const session = await res.json();
+  if (!res.ok) return Response.json({ error: 'checkout failed' }, { status: 502 });
+  return Response.json({ url: session.url });   // the button redirects here (checkout.stripe.com is allowlisted)
+}</code></pre>
+<div class="note">Use Stripe <strong>test mode</strong> keys while integrating, and fulfil orders from webhooks, not from <code>/thanks</code>.</div>
+
+<h3 id="vue">Vue 3</h3>
+<pre><code>&lt;script setup&gt;
+import { onMounted, onBeforeUnmount, ref } from 'vue';
+import grapesjs from 'grapesjs';
+import 'grapesjs/dist/css/grapes.min.css';
+import advanceComponents from 'grapesjs-advance-components';
+
+const el = ref(null);
+let editor;
+onMounted(() =&gt; { editor = grapesjs.init({ container: el.value, height: '100vh', storageManager: false, plugins: [advanceComponents] }); });
+onBeforeUnmount(() =&gt; editor?.destroy());
+&lt;/script&gt;
+&lt;template&gt;&lt;div ref="el" /&gt;&lt;/template&gt;</code></pre>
+<p>With Nuxt, wrap the component in <code>&lt;ClientOnly&gt;</code>.</p>
+
+<h3 id="saving">Saving and loading</h3>
+<p>Pages, styles and assets live in the standard GrapesJS project data, so any storage manager persists them. Remote storage to your own API:</p>
+<pre><code>storageManager: {
+  type: 'remote',
+  autosave: true,
+  stepsBeforeSave: 5,                         // batch saves instead of one request per edit
+  options: { remote: {
+    urlStore: `/api/projects/${id}`,
+    urlLoad:  `/api/projects/${id}`,
+    fetchOptions: (opts) =&gt; (opts.method === 'POST' ? { method: 'PUT' } : {}),
+    onStore: (data) =&gt; ({ data }),            // body sent to your API
+    onLoad: (result) =&gt; result.data,          // project JSON back into the editor
+  } },
+}</code></pre>
+
+<h3 id="ssr">Server-side rendering of saved projects</h3>
+<p>A common question is how to turn stored project JSON into HTML on the server, without a browser or editor UI. GrapesJS has a <code>headless</code> mode, and the export helpers run in it. <a href="https://github.com/VaibhavBansal26/grapesjs-advance-components/blob/main/examples/render-site.mjs"><code>examples/render-site.mjs</code></a> renders a project to a folder of static files:</p>
+<pre><code>npm i grapesjs grapesjs-advance-components jsdom
+node examples/render-site.mjs project.json ./out      # writes index.html, pricing.html, *.css, *.js</code></pre>
+<p>Node has no DOM, so the script gives it one with <code>jsdom</code> before importing GrapesJS. This was run end to end from a packed install in a clean directory.</p>
+
+<h3 id="csp">Publishing under a strict Content-Security-Policy</h3>
+<p>By default each exported page carries an inline <code>&lt;style&gt;</code> and <code>&lt;script&gt;</code>. If your site forbids inline code, export external files instead:</p>
+<pre><code>exportSiteFiles(editor, { assets: 'external' });
+// { 'index.html', 'index.css', 'index.js', 'pricing.html', … }, linked with &lt;link&gt; and &lt;script src defer&gt;</code></pre>
+<p>This covers <strong>published pages</strong>. It does not change how the editor itself runs; see the CSP note under <a href="#problems">Problems</a>.</p>
+
+<h3 id="publish">Publishing the files</h3>
+<p>The package produces files; it does not host them. <code>exportSiteFiles()</code> returns a plain <code>{ path: content }</code> map you can zip (<code>createZip</code>), upload to object storage, commit to a repo, or hand to a static host's upload API.</p>
+
+<h2 id="options">Options</h2>
+<table>
+<tr><th>Option</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>components</code></td><td>built-in list</td><td>Add, replace (by <code>name</code>) or hide (<code>visible: false</code>) blocks.</td></tr>
+<tr><td><code>injectStyles</code></td><td><code>true</code></td><td>Inject the base stylesheet. Set <code>false</code> to ship your own CSS for the <code>.aac-*</code> classes.</td></tr>
+<tr><td><code>i18n</code></td><td><code>{}</code></td><td>Extra messages per locale, merged over the English defaults.</td></tr>
+<tr><td><code>ai</code></td><td>off</td><td><code>{ generate }</code> enables AI block generation. See <a href="#ai">AI generation</a>.</td></tr>
+<tr><td><code>payments</code></td><td><code>{}</code></td><td><code>{ allowedHosts }</code> for the checkout button. See <a href="#payments">Stripe checkout</a>.</td></tr>
+<tr><td><code>pages</code></td><td><code>true</code></td><td><code>false</code> disables the page manager; <code>{ panel: false }</code> hides the panel button only.</td></tr>
+</table>
+<pre><code>pluginsOpts: {
+  [advanceComponents]: {
+    components: [
+      { label: 'Faq', name: 'faq', componentType: 'faq', visible: false },        // hide a default
+      { label: 'Email', name: 'email', category: 'Form', componentType: 'inputElement',
+        formElement: { type: 'email', name: 'email', label: 'Email', placeholder: 'you@example.com' } },
+    ],
+  },
+}</code></pre>
+
+<h2 id="blocks">Block reference</h2>
+<table>
+<tr><th>Block</th><th>Block id</th><th><code>componentType</code></th></tr>
+<tr><td>FAQ accordion (native <code>&lt;details&gt;</code>)</td><td><code>faq-block</code></td><td><code>faq</code></td></tr>
+<tr><td>Heading h1&ndash;h6</td><td><code>heading-h1-block</code> &hellip; <code>heading-h6-block</code></td><td><code>heading</code></td></tr>
+<tr><td>Paragraph</td><td><code>paragraph-block</code></td><td><code>paragraph</code></td></tr>
+<tr><td>Quote</td><td><code>quote-block</code></td><td><code>quote</code></td></tr>
+<tr><td>List</td><td><code>list-block</code></td><td><code>list</code></td></tr>
+<tr><td>Link</td><td><code>link-block</code></td><td><code>link</code></td></tr>
+<tr><td>Button</td><td><code>button-block</code></td><td><code>button</code></td></tr>
+<tr><td>Divider</td><td><code>divider-block</code></td><td><code>divider</code></td></tr>
+<tr><td>Progress bar</td><td><code>progress-bar-block</code></td><td><code>progress-bar</code></td></tr>
+<tr><td>Slider (CSS scroll-snap)</td><td><code>slider-block</code></td><td><code>slider</code></td></tr>
+<tr><td>Header / Footer</td><td><code>header-block</code>, <code>footer-block</code></td><td><code>header</code>, <code>footer</code></td></tr>
+<tr><td>Map, Image, Video</td><td><code>map-block</code>, <code>image-block</code>, <code>video-block</code></td><td><code>map</code>, <code>image</code>, <code>video</code></td></tr>
+<tr><td>Input, checkbox, radio</td><td><code>input-element-&lt;type&gt;-block</code></td><td><code>inputElement</code></td></tr>
+<tr><td>Select / Textarea</td><td><code>dropdown-block</code>, <code>textarea-block</code></td><td><code>dropdown</code>, <code>textarea</code></td></tr>
+<tr><td>Hero, Features, Call to action</td><td><code>hero-block</code>, <code>features-block</code>, <code>cta-block</code></td><td><code>hero</code>, <code>features</code>, <code>cta</code></td></tr>
+<tr><td>Contact form, Newsletter</td><td><code>form-block</code>, <code>newsletter-block</code></td><td><code>form</code>, <code>newsletter</code></td></tr>
+<tr><td>Checkout button</td><td><code>checkout-button-block</code></td><td><code>checkout</code></td></tr>
+<tr><td>Pricing card</td><td><code>pricing-block</code></td><td><code>pricing</code></td></tr>
+</table>
+<p>Blocks use inline SVG icons, so no icon font is needed. Form fields get unique ids and matching <code>label for</code>; option values and placeholders are escaped.</p>
+
+<h2 id="theming">Theming</h2>
+<p>The blocks look finished with no setup, and every colour and the corner radius read a CSS custom property, so one line re-skins them. Try it live in the <a href="showcase.html">block showcase</a> (light, dark and a teal re-skin).</p>
+<pre><code>:root { --aac-accent: #0d9488; --aac-radius: 4px; }          /* re-skin */
+&lt;body data-aac-theme="dark"&gt;                                    /* dark pages: any ancestor works */</code></pre>
+<table>
+<tr><th>Token</th><th>Default</th><th>Controls</th></tr>
+<tr><td><code>--aac-accent</code></td><td><code>#4f46e5</code></td><td>Buttons, links on hover, check marks, progress fill, focus colour</td></tr>
+<tr><td><code>--aac-accent-hover</code></td><td><code>#4338ca</code></td><td>Button hover</td></tr>
+<tr><td><code>--aac-accent-fg</code></td><td><code>#ffffff</code></td><td>Text on accent backgrounds</td></tr>
+<tr><td><code>--aac-fg</code></td><td>inherits the page</td><td>Block text colour</td></tr>
+<tr><td><code>--aac-muted</code></td><td><code>#71717a</code></td><td>Secondary text (FAQ answers, captions, nav)</td></tr>
+<tr><td><code>--aac-border</code></td><td><code>#e4e4e7</code></td><td>Card, field and divider borders</td></tr>
+<tr><td><code>--aac-bg</code></td><td><code>#fafafa</code></td><td>Soft surfaces (slider, hover)</td></tr>
+<tr><td><code>--aac-surface</code></td><td><code>#ffffff</code></td><td>Cards, fields, header</td></tr>
+<tr><td><code>--aac-track</code></td><td><code>#e4e4e7</code></td><td>Progress bar track</td></tr>
+<tr><td><code>--aac-ring</code></td><td>indigo, 35%</td><td>Keyboard focus ring</td></tr>
+<tr><td><code>--aac-radius</code>, <code>--aac-radius-lg</code></td><td><code>8px</code>, <code>14px</code></td><td>Corner radius for controls and for cards</td></tr>
+<tr><td><code>--aac-shadow</code></td><td>soft two-layer</td><td>Pricing card shadow</td></tr>
+</table>
+<h3>What is built in</h3>
+<ul>
+  <li><strong>States:</strong> hover, active and visible keyboard focus on buttons, form fields and FAQ rows.</li>
+  <li><strong>Responsive:</strong> the header and footer wrap, the slider and pricing card tighten below 640px.</li>
+  <li><strong>Motion:</strong> transitions switch off under <code>prefers-reduced-motion</code>.</li>
+  <li><strong>Variants:</strong> add the class <code>aac-button--outline</code> to a button for the outline style.</li>
+  <li><strong>Typography is yours.</strong> Blocks inherit your page's font. They do not set a font family.</li>
+</ul>
+<p>The stylesheet is also exported (<code>import { baseCss } from 'grapesjs-advance-components'</code>) if you want to extend it, and <code>injectStyles: false</code> turns it off entirely.</p>
+<div class="note">Two GrapesJS behaviours shaped this stylesheet, and both are enforced by tests. Its CSS parser silently drops a shorthand such as <code>background: var(&hellip;)</code> or <code>border-color: var(&hellip;)</code>, so custom properties only appear in longhand properties. And it keeps only the <em>last</em> rule for a selector, so each selector is declared exactly once. If you add your own rules through <code>editor.Css</code>, the same two rules apply.</div>
+
+<h2 id="progress">Progress bar</h2>
+<p>A real component (<code>aac-progress-bar</code>) with <code>percentage</code> (0&ndash;100, clamped) and <code>color</code> traits. The bar uses your <code>--aac-accent</code> until you pick a colour. State lives in the inner element's style and <code>aria-valuenow</code> stays in sync, so exported HTML needs no script. Saved HTML is recognised again when loaded.</p>
+
+<h2 id="ai">AI block generation</h2>
+<p>Describe what you want ("pricing FAQ for a project-management SaaS") and it lands on the canvas as editable components, inserted below the selection or replacing it. Undo works as usual. <strong>You provide the model call</strong>, so there is no vendor lock-in and no API key in the browser.</p>
+<h3>1. Through your backend</h3>
+<pre><code>import advanceComponents, { createFetchGenerator } from 'grapesjs-advance-components';
+
+pluginsOpts: {
+  [advanceComponents]: {
+    ai: { generate: createFetchGenerator('/api/ai') },
+  },
+}</code></pre>
+<p><code>createFetchGenerator</code> POSTs <code>{ prompt, system, mode, currentHtml }</code> and expects <code>{ "html": "&hellip;" }</code>. <a href="https://github.com/VaibhavBansal26/grapesjs-advance-components/blob/main/examples/ai-server.mjs"><code>examples/ai-server.mjs</code></a> is a ~60-line server that forwards to the Anthropic Messages API.</p>
+<h3>2. Any function</h3>
+<pre><code>ai: {
+  generate: async ({ prompt, system, mode, currentHtml, signal }) =&gt; {
+    return await myBackend.complete({ system, prompt, currentHtml, signal }); // string or { html }
+  },
+}</code></pre>
+<table>
+<tr><th><code>ai</code> option</th><th>Default</th><th></th></tr>
+<tr><td><code>generate</code></td><td>required</td><td><code>(req) =&gt; Promise&lt;string | { html }&gt;</code></td></tr>
+<tr><td><code>sanitize</code></td><td>built-in allowlist</td><td>Replace the sanitizer. Must return HTML that is safe to render and export.</td></tr>
+<tr><td><code>system</code></td><td>built-in prompt</td><td>System prompt sent with each request.</td></tr>
+<tr><td><code>toolbar</code></td><td><code>true</code></td><td>&#10024; button on the toolbar of selected components.</td></tr>
+<tr><td><code>commandId</code></td><td><code>aac:ai-generate</code></td><td></td></tr>
+<tr><td><code>timeoutMs</code></td><td><code>60000</code></td><td>Aborts via <code>req.signal</code> and rejects.</td></tr>
+</table>
+<pre><code>editor.runCommand('aac:ai-generate');                                  // opens the dialog
+await editor.runCommand('aac:ai-generate', { prompt: 'Hero for a coffee shop' });
+await editor.runCommand('aac:ai-generate', { prompt: 'Make it shorter', mode: 'replace' });
+editor.on('aac:ai:generated', ({ prompt, mode, components }) =&gt; {});</code></pre>
+
+<h2 id="payments">Stripe checkout</h2>
+<p>The <strong>Checkout</strong> and <strong>Pricing</strong> blocks add a button that sends the visitor to a Stripe-hosted page. Card details never touch your page or this package, and no secret key is ever involved.</p>
+<table>
+<tr><th>Mode</th><th>How it works</th></tr>
+<tr><td><code>link</code></td><td>Redirects to a <a href="https://stripe.com/payments/payment-links">Payment Link</a> (<code>https://buy.stripe.com/&hellip;</code>). No backend needed.</td></tr>
+<tr><td><code>session</code></td><td>POSTs <code>{ priceId, quantity }</code> to your endpoint, which creates a Checkout Session with your secret key and returns <code>{ url }</code>.</td></tr>
+</table>
+<pre><code>components: [
+  { label: 'Buy', name: 'checkout', category: 'Commerce', componentType: 'checkout',
+    checkoutElement: { mode: 'link', url: 'https://buy.stripe.com/xxxx', buttonText: 'Buy now' } },
+]
+payments: { allowedHosts: ['checkout.stripe.com', 'buy.stripe.com'] }   // default</code></pre>
+<h3>Safety and hooks</h3>
+<ul>
+  <li>Redirects only go to <code>https</code> hosts in <code>allowedHosts</code>; anything else is blocked and reported (<code>https://buy.stripe.com.evil.com</code> is rejected). Add your host if you use a custom Checkout domain.</li>
+  <li>The button is inert inside the editor canvas.</li>
+  <li>Cancelable events bubble from the button: <code>aac:checkout</code> (<code>detail.url</code>; call <code>preventDefault()</code> to take over the redirect or send analytics) and <code>aac:checkout-error</code> (<code>detail.message</code>).</li>
+  <li>While a session request is in flight the button has <code>aria-busy="true"</code>; errors show through <code>data-error</code>.</li>
+</ul>
+<div class="note warn">The package never validates payments. Fulfil orders from Stripe webhooks on your server, not from the success page.</div>
+
+<h2 id="forms">Forms that submit</h2>
+<p>The <strong>Contact form</strong> and <strong>Newsletter</strong> blocks post to <em>your</em> endpoint, or to a form service such as Formspree or Netlify Forms. Set the endpoint in the trait panel, or in the plugin options:</p>
+<pre><code>components: [
+  { label: 'Contact', name: 'form', category: 'Form', componentType: 'form',
+    formAction: { endpoint: 'https://api.example.com/contact', encoding: 'json',
+                  successMessage: 'Thanks, we will reply soon.', redirectUrl: '/thanks.html' } },
+]</code></pre>
+<table>
+<tr><th>Behaviour</th><th>Detail</th></tr>
+<tr><td>Validation</td><td>Uses the browser's built-in validation (<code>required</code>, <code>type="email"</code>); nothing is sent until the form is valid.</td></tr>
+<tr><td>Sending</td><td><code>fetch</code> POST of JSON (default) or form-encoded data (<code>encoding: 'form'</code>, which form services expect). File uploads are not supported.</td></tr>
+<tr><td>States</td><td>An <code>aria-live</code> status line shows sending, success and error. Values are kept when sending fails and cleared on success.</td></tr>
+<tr><td>Bots</td><td>A hidden honeypot field (<code>_gotcha</code>). If a bot fills it, the form looks successful and sends nothing. It is a first line of defence only.</td></tr>
+<tr><td>No JavaScript</td><td>The form still has <code>method="post"</code> and your <code>action</code>, so it falls back to a normal browser POST.</td></tr>
+<tr><td>Safety</td><td>Endpoints must be <code>https</code> (or <code>http</code> on localhost). An empty, <code>javascript:</code> or plain-<code>http</code> endpoint is refused with a visible message.</td></tr>
+</table>
+<h3>Events</h3>
+<p>Cancelable and bubbling, on the form element of the published page:</p>
+<pre><code>form.addEventListener('aac:form-submit', (e) =&gt; {
+  e.preventDefault();                       // take over sending (your own API client, analytics, CAPTCHA token…)
+  myApi.send(e.detail.data);                // { name, email, message }
+});
+form.addEventListener('aac:form-success', (e) =&gt; track('lead', e.detail.data));
+form.addEventListener('aac:form-error',   (e) =&gt; console.warn(e.detail.message));</code></pre>
+<h3>A backend in a few lines</h3>
+<pre><code>// Next.js: app/api/contact/route.js
+export async function POST(req) {
+  const { name, email, message } = await req.json();
+  if (!name || !/^\S+@\S+\.\S+$/.test(email) || !message) return Response.json({ error: 'invalid' }, { status: 400 });
+  await sendEmail({ to: process.env.INBOX, replyTo: email, subject: `Message from ${name}`, text: message });
+  return Response.json({ ok: true });
+}</code></pre>
+<div class="note warn">Add server-side rate limiting and, for public sites, a CAPTCHA. A honeypot stops simple bots, not determined spam. If the form and the API are on different origins, the API must send CORS headers allowing your site.</div>
+
+<h2 id="pages">Multi-page sites</h2>
+<p>GrapesJS has a native Pages API, and the plugin builds on it. A <strong>Pages</strong> button (&#128196;) in the options panel opens a manager to add, rename, switch and delete pages and to download the whole site.</p>
+<pre><code>editor.runCommand('aac:pages');          // open the manager
+editor.runCommand('aac:download-site');  // site.zip with one HTML file per page</code></pre>
+<h3>Linking between pages</h3>
+<p>Set a link's href to <code>page:&lt;slug&gt;</code> (the slug of the page name, e.g. <code>page:about-us</code>). It is rewritten to <code>about-us.html</code> on export. The first page is always <code>index.html</code>.</p>
+<h3>Export from code</h3>
+<pre><code>import { exportSite, exportSiteFiles, createZip } from 'grapesjs-advance-components';
+
+const pages = exportSite(editor, { lang: 'en', siteName: 'Acme', description: 'What Acme does', head: '&lt;link rel="icon" href="/f.ico"&gt;' });
+// [{ id, name, file: 'index.html', html, css, js, document }, ...]   (js = component scripts, e.g. checkout)
+
+const files = exportSiteFiles(editor);     // { 'index.html': '...', 'about.html': '...' }
+const zip = createZip(files);              // Uint8Array, no dependencies</code></pre>
+<p>Component scripts (such as the checkout button's) are included in every export, inline by default or as <code>.js</code> files with <code>assets: 'external'</code> (see <a href="#csp">strict CSP</a>). Pass <code>siteName</code> and <code>description</code> to get proper <code>&lt;title&gt;</code> tags (<code>About &middot; Acme</code>) and a meta description on every page. Page names are escaped in the title, and duplicate file names get a numeric suffix. Pages are stored in the normal GrapesJS project data, so any storage manager persists them.</p>
+
+<h2 id="api">API &amp; events</h2>
+<table>
+<tr><th>Name</th><th>Kind</th><th>Purpose</th></tr>
+<tr><td><code>aac:ai-generate</code></td><td>command</td><td>Open the AI dialog, or generate with <code>{ prompt, mode }</code>.</td></tr>
+<tr><td><code>aac:pages</code></td><td>command</td><td>Open the page manager.</td></tr>
+<tr><td><code>aac:download-site</code></td><td>command</td><td>Download the site as a zip.</td></tr>
+<tr><td><code>aac:ai:generated</code></td><td>editor event</td><td><code>{ prompt, mode, components }</code> after a generation lands.</td></tr>
+<tr><td><code>aac:checkout</code>, <code>aac:checkout-error</code></td><td>DOM events</td><td>From the checkout button, on published pages.</td></tr>
+<tr><td><code>aac:form-submit</code>, <code>aac:form-success</code>, <code>aac:form-error</code></td><td>DOM events</td><td>From form blocks, on published pages. <code>aac:form-submit</code> is cancelable.</td></tr>
+<tr><td><code>exportSite</code>, <code>exportSiteFiles</code>, <code>downloadSite</code>, <code>createZip</code>, <code>slugify</code></td><td>functions</td><td>Site export helpers.</td></tr>
+<tr><td><code>sanitizeHtml</code>, <code>createFetchGenerator</code>, <code>runAiGeneration</code>, <code>DEFAULT_SYSTEM</code></td><td>functions</td><td>AI building blocks.</td></tr>
+<tr><td><code>defaultComponents</code></td><td>const</td><td>The built-in block list, for extending.</td></tr>
+</table>
+<p>Everything is typed; the full option types ship in <code>dist/index.d.ts</code>.</p>
+
+<h2 id="problems">Problems developers report, and where this fits</h2>
+<p>These come from the <a href="https://github.com/GrapesJS/grapesjs/issues">GrapesJS issue tracker</a> and community write-ups. Many are limits of GrapesJS itself, which a plugin cannot fix, so the third column says plainly what this package does and does not do.</p>
+<table>
+<tr><th>Problem</th><th>Reference</th><th>Status here</th></tr>
+<tr><td>Embedding in React, Next.js or Vue; <code>window is not defined</code> on the server</td><td><a href="https://github.com/GrapesJS/grapesjs/issues/1970">#1970</a>, <a href="https://github.com/GrapesJS/grapesjs/issues/3478">#3478</a></td><td><strong>Guides only.</strong> Copy-paste patterns above; the plugin adds no framework code.</td></tr>
+<tr><td>Rendering saved project JSON to HTML on the server</td><td><a href="https://github.com/GrapesJS/grapesjs/issues/3399">#3399</a></td><td><strong>Solved with a recipe.</strong> The headless editor plus <code>exportSite</code>; tested in plain Node.</td></tr>
+<tr><td>Managing and exporting multiple pages</td><td><a href="https://github.com/GrapesJS/grapesjs/issues/3403">#3403</a></td><td><strong>Provided.</strong> Page manager, <code>page:slug</code> links, one-call export. Shared headers and per-page SEO fields are not included yet.</td></tr>
+<tr><td>Elements that share an <code>id</code> across pages get renamed (<code>main-title-2</code>)</td><td><a href="https://github.com/GrapesJS/grapesjs/issues/4837">#4837</a> (open)</td><td><strong>Not fixed.</strong> It is core behaviour. Use classes, not hand-written ids, for anything repeated across pages.</td></tr>
+<tr><td>Strict CSP blocks inline styles, scripts and the canvas iframe</td><td><a href="https://github.com/GrapesJS/grapesjs/issues/6690">#6690</a> (open)</td><td><strong>Published pages only.</strong> <code>assets: 'external'</code> removes inline code from exports. The editor's own CSP problems are core and remain.</td></tr>
+<tr><td>Untrusted HTML ending up in the page (XSS)</td><td><a href="https://github.com/GrapesJS/grapesjs/issues/5743">#5743</a>, <a href="https://github.com/GrapesJS/grapesjs/issues/3268">#3268</a></td><td><strong>AI output only.</strong> A sanitizer guards what the model returns. It does not sanitize other content you import into the editor.</td></tr>
+<tr><td>Accessibility of what gets published</td><td><a href="https://github.com/GrapesJS/grapesjs/issues/654">#654</a>, <a href="https://github.com/GrapesJS/grapesjs/issues/6634">#6634</a></td><td><strong>Blocks only.</strong> Semantic markup: <code>&lt;details&gt;</code> FAQ, labelled inputs, ARIA on progress and slider. The editor UI's own accessibility is core.</td></tr>
+<tr><td>Adding AI to the editor</td><td><a href="https://grapesjs.com/blog/ai-chat-plugin-visual-editor-integration">GrapesJS blog</a></td><td><strong>Lightweight option.</strong> See the comparison below.</td></tr>
+<tr><td>Taking payments from a built page</td><td>no single issue; a common ask</td><td><strong>Provided</strong> via Stripe-hosted pages, not an in-page card form.</td></tr>
+</table>
+
+<h3 id="alternatives">Where it fits next to other options</h3>
+<table>
+<tr><th>You need</th><th>Options</th></tr>
+<tr><td>AI inside the editor</td><td>The GrapesJS team offers an <strong>AI Chat plugin in the Studio SDK</strong> (chat panel, section generation, context kept between sessions). That is a separate product from the open-source core, so check its pricing and licence. This package is a smaller alternative for the open-source core: one <code>generate</code> function, any provider, sanitized output, no chat UI or streaming.</td></tr>
+<tr><td>A zip of a single page</td><td>The official <a href="https://www.npmjs.com/package/grapesjs-plugin-export"><code>grapesjs-plugin-export</code></a> does this. This package's zip export covers all pages and has no dependencies.</td></tr>
+<tr><td>A deploy dashboard</td><td>Community plugins exist for Netlify. This package stops at producing the files.</td></tr>
+</table>
+<div class="note">If you only need a handful of blocks, <code>grapesjs-blocks-basic</code> is smaller. This package earns its place when you want accessible blocks <em>plus</em> AI, checkout or multi-page export in one tested bundle.</div>
+
+<h2 id="security">Security</h2>
+<ul>
+  <li><strong>Model output is untrusted.</strong> Before it reaches the canvas or exported HTML, an allowlist sanitizer removes <code>&lt;script&gt;</code>, <code>&lt;iframe&gt;</code>, <code>&lt;svg&gt;</code>, event-handler attributes, <code>javascript:</code> / <code>data:</code> / protocol-relative URLs and CSS <code>url()</code>.</li>
+  <li><strong>No keys in the browser.</strong> Keep provider and Stripe secret keys on your server and put auth and rate limits on your AI and checkout endpoints.</li>
+  <li><strong>Checkout redirects are allowlisted</strong> (see above).</li>
+</ul>
+
+<h2 id="migrating">Migrating from v1</h2>
+<ul>
+  <li><code>grapesjs</code> is now a peer dependency; install it yourself.</li>
+  <li>Block ids are unchanged. The heading entry now registers h1&ndash;h6 unless <code>headingType</code> is set.</li>
+  <li>Entries that never produced a block (<code>countdown</code>, <code>imageFeature</code>, <code>tab</code>, <code>form</code>, <code>icon</code>) were removed. <code>checkout</code> now exists for real.</li>
+  <li>FAQ, slider, progress bar, divider and form markup moved to <code>aac-*</code> classes. Pages saved with v1 keep their inline styles.</li>
+  <li>The browser build is <code>dist/index.global.js</code>.</li>
+</ul>
+
+<h2 id="contributing">Contributing</h2>
+<pre><code>npm i
+npm test         # vitest + jsdom (headless GrapesJS)
+npm run build    # dist/: esm, cjs, d.ts, global
+npm run docs     # copies dist into docs/ for local preview of this site</code></pre>
+<p>Commit messages follow <a href="https://www.conventionalcommits.org">Conventional Commits</a>; a push to <code>main</code> releases automatically (<code>feat</code> = minor, <code>fix</code> = patch, <code>feat!</code> = major).</p>
+</main>
+</div>
+<script>
+// highlight the current section in the sidebar
+const links=[...document.querySelectorAll('aside.side a')];
+const map=new Map(links.map(a=>[a.getAttribute('href').slice(1),a]));
+const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map.get(e.target.id)?.classList.add('active')}}),{rootMargin:'-20% 0px -70% 0px'});
+document.querySelectorAll('main h2[id]').forEach(h=>io.observe(h));
+</script>
+</body>
+</html>
