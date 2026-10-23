@@ -112,11 +112,13 @@ describe('aac edit server', () => {
   it('publishes allowed file names into public/ and nothing else', async () => {
     const ok = await call('POST', '/publish', { headers: goodHeaders(), body: { files: { 'index.html': '<p>hi</p>', 'index.css': 'a{}', 'index.js': '1' } } });
     expect(ok.status).toBe(200);
-    expect((await readdir(join(dir, 'public'))).sort()).toEqual(['index.css', 'index.html', 'index.js']);
+    expect((await readdir(join(dir, 'public'))).sort()).toEqual(['_headers', 'index.css', 'index.html', 'index.js']);
+    // the policy is written by the server, with the configured form endpoint (/api/contact is same-origin)
+    expect(await readFile(join(dir, 'public', '_headers'), 'utf8')).toContain("script-src 'self'");
     expect(await readFile(join(dir, 'public', 'index.html'), 'utf8')).toBe('<p>hi</p>');
   });
 
-  it.each(['../evil.html', '..\\evil.html', '/etc/passwd.html', 'sub/index.html', '.hidden.html', 'index.php', 'index', 'A.html', 'a b.html'])(
+  it.each(['_headers', '../evil.html', '..\\evil.html', '/etc/passwd.html', 'sub/index.html', '.hidden.html', 'index.php', 'index', 'A.html', 'a b.html'])(
     'rejects file name %j and writes nothing',
     async (name) => {
       const r = await call('POST', '/publish', { headers: goodHeaders(), body: { files: { 'ok.html': 'fine', [name]: 'bad' } } });
@@ -158,5 +160,32 @@ describe('aac edit server', () => {
     expect((await call('GET', '/assets/../../etc/passwd', { headers: h })).status).toBe(404);
     expect((await call('GET', '/assets/%2e%2e/package.json', { headers: h })).status).toBe(404);
     expect((await call('DELETE', '/project', { headers: goodHeaders() })).status).toBe(404);
+  });
+
+  describe('leak protection', () => {
+    const secret = ['sk', '_', 'live', '_', '4'.repeat(24)].join('');
+
+    it('rejects saving a project that contains a secret, without echoing it', async () => {
+      const before = await readFile(join(dir, 'project.json'), 'utf8');
+      const r = await call('PUT', '/project', { headers: goodHeaders(), body: { ...project, notes: `stripe ${secret}` } });
+      expect(r.status).toBe(422);
+      expect(r.body).toContain('stripe-secret-key');
+      expect(r.body).not.toContain(secret);
+      expect(await readFile(join(dir, 'project.json'), 'utf8')).toBe(before);
+    });
+
+    it('rejects publishing a file that contains a secret and writes nothing', async () => {
+      const r = await call('POST', '/publish', { headers: goodHeaders(), body: { files: { 'index.html': '<p>fine</p>', 'index.js': `var k="${secret}";` } } });
+      expect(r.status).toBe(422);
+      expect(r.body).not.toContain(secret);
+      expect(await readdir(dir)).not.toContain('public');
+    });
+
+    it('rejects publishing exploitable markup but allows ordinary pages', async () => {
+      const bad = await call('POST', '/publish', { headers: goodHeaders(), body: { files: { 'index.html': '<a href="javascript:alert(1)">x</a>' } } });
+      expect(bad.status).toBe(422);
+      const ok = await call('POST', '/publish', { headers: goodHeaders(), body: { files: { 'index.html': '<p>hello</p>' } } });
+      expect(ok.status).toBe(200);
+    });
   });
 });

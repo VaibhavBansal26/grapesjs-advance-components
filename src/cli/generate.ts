@@ -1,6 +1,8 @@
 import type { Editor } from 'grapesjs';
 import plugin, { exportSiteFiles } from '../index';
 import { DEFAULT_ALLOWED_HOSTS } from '../payments';
+import { originOf } from '../security/headers';
+import { assertSafe, type Finding } from '../security/scan';
 import type { ComponentOption } from '../types';
 import { extractJson, parseCopy, SYSTEM_PROMPT, type SiteCopy } from './copy';
 import { ensureDom } from './dom';
@@ -15,6 +17,8 @@ export interface SiteOptions {
   /** Page titles and the meta description on exported pages. Filled in from the generated copy. */
   siteName?: string;
   description?: string;
+  /** Scanner rule ids to ignore, e.g. `['public-webhook-url']`. Explicit opt-out; high-severity secrets stay blocked otherwise. */
+  allow?: string[];
 }
 
 export interface GenerateOptions extends SiteOptions {
@@ -33,6 +37,8 @@ export interface GeneratedSite {
   files: Record<string, string>;
   copy: SiteCopy;
   pages: string[];
+  /** Non-blocking scanner notes (medium and low). Blocking findings throw instead. */
+  findings: Finding[];
 }
 
 const HEX = /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i;
@@ -138,12 +144,11 @@ export async function generateSite(o: GenerateOptions): Promise<GeneratedSite> {
       } as never);
     });
 
-    return {
-      project: editor.getProjectData() as Record<string, unknown>,
-      files: exportSiteFiles(editor, { assets: 'external', lang: 'en', siteName: copy.name, description: copy.tagline }),
-      copy,
-      pages: names,
-    };
+    const project = editor.getProjectData() as Record<string, unknown>;
+    const files = exportSiteFiles(editor, { assets: 'external', lang: 'en', siteName: copy.name, description: copy.tagline, securityHeaders: { connectOrigins: [originOf(o.formEndpoint)] } });
+    // Fail closed: a secret or exploitable markup in anything we are about to write stops the run.
+    const findings = assertSafe({ ...files, 'project.json': JSON.stringify(project) }, { allow: o.allow });
+    return { project, files, copy, pages: names, findings };
   } finally {
     editor.destroy();
   }
@@ -153,7 +158,9 @@ export async function generateSite(o: GenerateOptions): Promise<GeneratedSite> {
 export async function exportProject(project: Record<string, unknown>, site: SiteOptions = {}): Promise<Record<string, string>> {
   const editor = await createEditor(site, project);
   try {
-    return exportSiteFiles(editor, { assets: 'external', lang: 'en', siteName: site.siteName, description: site.description });
+    const files = exportSiteFiles(editor, { assets: 'external', lang: 'en', siteName: site.siteName, description: site.description, securityHeaders: { connectOrigins: [originOf(site.formEndpoint)] } });
+    assertSafe({ ...files, 'project.json': JSON.stringify(project) }, { allow: site.allow });
+    return files;
   } finally {
     editor.destroy();
   }

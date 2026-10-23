@@ -181,6 +181,17 @@ const files = exportSiteFiles(editor);                        // { 'index.html':
 const strict = exportSiteFiles(editor, { assets: 'external' }); // + .css/.js files, for strict CSP sites
 ```
 
+## Security and automation
+
+Generated sites are scanned before anything is written: a secret-shaped value (Anthropic, OpenAI, Stripe secret, GitHub, AWS keys, private keys, credentials or tokens in URLs) or exploitable markup stops `generate`, `build`, the editor's Save/Publish and the API, and findings are shown redacted. Exports include a strict-CSP `_headers` file (no inline script or style). Keys are read from the environment only, and errors are redacted before they reach the terminal.
+
+```bash
+npx aac audit ./site --strict        # fail CI on a leak or unsafe markup
+AAC_API_TOKEN="$(openssl rand -hex 24)" npx aac serve --root ./sites   # HTTP API for n8n, Zapier or cron
+```
+
+`aac serve` needs a 24+ character bearer token, listens on loopback, rejects browser requests, and limits jobs and hourly volume. An importable n8n workflow is in [`examples/n8n`](examples/n8n). No tool can promise zero leaks: everything in a static site is public, and a webhook URL is a bearer credential. Read [what is and is not covered](https://vaibhavbansal26.github.io/grapesjs-advance-components/#security) and [SECURITY.md](SECURITY.md).
+
 ## Migrating from v1
 
 - `grapesjs` is now a peer dependency; install it yourself.
