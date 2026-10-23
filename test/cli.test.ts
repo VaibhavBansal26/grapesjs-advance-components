@@ -1,9 +1,9 @@
-import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { extractJson, parseCopy, sampleCopy } from '../src/cli/copy';
 import { main, parseArgs } from '../src/cli/index';
 import { exportProject, generateSite } from '../src/cli/generate';
@@ -42,7 +42,7 @@ describe('generateSite', () => {
   it('builds a multi-page landing site from copy', async () => {
     const site = await gen({ name: 'Crumb & Co' });
     expect(site.pages).toEqual(['Home', 'Pricing', 'Contact']);
-    expect(Object.keys(site.files).sort()).toEqual(['contact.css', 'contact.html', 'contact.js', 'index.css', 'index.html', 'pricing.css', 'pricing.html']);
+    expect(Object.keys(site.files).sort()).toEqual(['_headers', 'contact.css', 'contact.html', 'contact.js', 'index.css', 'index.html', 'pricing.css', 'pricing.html']);
     const home = site.files['index.html']!;
     expect(home).toContain('aac-hero');
     expect(home).toContain('Crumb &amp; Co');
@@ -265,5 +265,154 @@ describe('aac commands', () => {
     expect((await run('build', join(tmpdir(), 'aac-does-not-exist'))).out).toMatch(/No project.json/);
     expect((await run('templates')).out).toContain('local-business');
     expect((await run('--help')).code).toBe(0);
+  });
+
+  describe('leak protection', () => {
+    const secret = ['sk', '-', 'ant', '-', 'api03', '-', 'x'.repeat(40)].join('');
+
+    it('refuses a form endpoint that carries a secret and writes nothing', async () => {
+      dir = await mkdtemp(join(tmpdir(), 'aac-'));
+      const out = join(dir, 'site');
+      const r = await run('generate', 'A shop', '--provider', 'mock', '--form-endpoint', 'https://hooks.example.com/in?token=abcdef123456789', '--out', out);
+      expect(r.code).toBe(1);
+      expect(r.out).toMatch(/Blocked/);
+      expect(r.out).toMatch(/url-secret-param/);
+      expect(r.out).not.toContain('abcdef123456789');
+      expect(await readdir(dir)).toEqual([]);
+    });
+
+    it('blocks a model that echoes a key into the copy', async () => {
+      const leaky: Provider = { label: 'leaky', complete: async () => JSON.stringify({ ...sampleCopy('x'), about: `Our key is ${secret}`, name: secret.slice(0, 40) }) };
+      await expect(generateSite({ brief: 'A shop', template: 'local-business', provider: leaky })).rejects.toThrow(/Blocked/);
+      await expect(generateSite({ brief: 'A shop', template: 'local-business', provider: leaky })).rejects.not.toThrow(secret);
+    });
+
+    it('only lets a rule through when it is explicitly allowed', async () => {
+      const hook = 'https://n8n.example.com/webhook/6f1e2d3c-intake?token=abcdef123456789';
+      await expect(gen({ formEndpoint: hook })).rejects.toThrow(/url-secret-param/);
+      const ok = await gen({ formEndpoint: hook, allow: ['url-secret-param'] });
+      expect(ok.findings.map((f) => f.rule)).toContain('public-webhook-url'); // still reported as a note
+    });
+
+    it('build refuses a project that has had a secret pasted into it', async () => {
+      dir = await mkdtemp(join(tmpdir(), 'aac-'));
+      const out = join(dir, 'site');
+      expect((await run('generate', 'A shop', '--provider', 'mock', '--out', out)).code).toBe(0);
+      const project = JSON.parse(await readFile(join(out, 'project.json'), 'utf8'));
+      project.pages[0].frames[0].component.components[0].components[0].components[0].components.push({ type: 'textnode', content: `key ${secret}` });
+      await writeFile(join(out, 'project.json'), JSON.stringify(project));
+      await rm(join(out, 'public'), { recursive: true });
+      const r = await run('build', out);
+      expect(r.code).toBe(1);
+      expect(r.out).toMatch(/anthropic-key/);
+      expect(r.out).not.toContain(secret);
+      expect(await readdir(out)).not.toContain('public');
+    });
+
+    it('redacts the API key even if an upstream error echoes it', async () => {
+      const saved = process.env.ANTHROPIC_API_KEY;
+      process.env.ANTHROPIC_API_KEY = secret;
+      vi.stubGlobal('fetch', async () => {
+        throw new Error(`proxy rejected request with header x-api-key: ${secret}`);
+      });
+      try {
+        const r = await run('generate', 'A shop', '--provider', 'anthropic', '--out', 'aac-never-written');
+        expect(r.code).toBe(1);
+        expect(r.out).not.toContain(secret);
+        expect(r.out).toContain('[redacted]');
+      } finally {
+        if (saved === undefined) delete process.env.ANTHROPIC_API_KEY;
+        else process.env.ANTHROPIC_API_KEY = saved;
+        vi.unstubAllGlobals();
+      }
+    });
+  });
+
+  it('writes a strict CSP that allows only the form endpoint origin', async () => {
+    const site = await gen({ formEndpoint: 'https://api.example.com/contact?x=1' });
+    const headers = site.files._headers!;
+    expect(headers).toContain("script-src 'self'");
+    expect(headers).toContain("style-src 'self'");
+    expect(headers).toContain("connect-src 'self' https://api.example.com;");
+    expect(headers).toContain("form-action 'self' https://api.example.com;");
+    expect(headers).not.toMatch(/unsafe-inline|unsafe-eval/);
+    expect(headers).toContain("frame-ancestors 'none'");
+    expect(headers).toContain('X-Content-Type-Options: nosniff');
+    // a relative endpoint needs no extra origin
+    expect((await gen({ formEndpoint: '/api/contact' })).files._headers).toContain("connect-src 'self';");
+  });
+});
+
+describe('aac audit', () => {
+  let dir = '';
+  afterEach(async () => {
+    if (dir) await rm(dir, { recursive: true, force: true });
+    dir = '';
+  });
+  const run = async (...args: string[]) => {
+    const logs: string[] = [];
+    const log = console.log;
+    const err = console.error;
+    console.log = (...a: unknown[]) => void logs.push(a.join(' '));
+    console.error = (...a: unknown[]) => void logs.push(a.join(' '));
+    try {
+      return { code: await main(args), out: logs.join('\n') };
+    } finally {
+      console.log = log;
+      console.error = err;
+    }
+  };
+  const secret = ['sk', '_', 'live', '_', '7'.repeat(24)].join('');
+
+  it('passes a clean generated site', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'aac-'));
+    expect((await run('generate', 'A shop', '--provider', 'mock', '--out', dir, '--force')).code).toBe(0);
+    const r = await run('audit', dir);
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/0 high, 0 medium/);
+    expect(r.out).toMatch(/Passed/);
+  });
+
+  it('fails on a leaked secret, with a redacted report and --json support', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'aac-'));
+    await run('generate', 'A shop', '--provider', 'mock', '--out', dir, '--force');
+    await writeFile(join(dir, 'public', 'oops.js'), `fetch("/x",{headers:{Authorization:"Bearer x"}});var key="${secret}";`);
+    const text = await run('audit', dir);
+    expect(text.code).toBe(1);
+    expect(text.out).toMatch(/FAILED/);
+    expect(text.out).toMatch(/stripe-secret-key/);
+    expect(text.out).not.toContain(secret);
+
+    const json = await run('audit', dir, '--json');
+    expect(json.code).toBe(1);
+    const parsed = JSON.parse(json.out);
+    expect(parsed.passed).toBe(false);
+    expect(parsed.summary.high).toBeGreaterThanOrEqual(1);
+    expect(json.out).not.toContain(secret);
+  });
+
+  it('--strict also fails on medium findings; --allow suppresses a rule', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'aac-'));
+    await writeFile(join(dir, 'index.html'), '<img src="a.png" onerror="x()"><p>hello</p>');
+    expect((await run('audit', dir)).code).toBe(0);
+    expect((await run('audit', dir, '--strict')).code).toBe(1);
+    expect((await run('audit', dir, '--strict', '--allow', 'inline-event-handler,no-security-headers')).code).toBe(0);
+  });
+
+  it('scans any folder, skips node_modules, and reports a missing _headers as a note', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'aac-'));
+    await mkdir(join(dir, 'node_modules', 'pkg'), { recursive: true });
+    await writeFile(join(dir, 'node_modules', 'pkg', 'x.js'), `var k="${secret}"`);
+    await writeFile(join(dir, 'index.html'), '<p>hello</p>');
+    const r = await run('audit', dir);
+    expect(r.code).toBe(0);
+    expect(r.out).toMatch(/no-security-headers/);
+    expect(r.out).toContain('Scanned 1 files');
+  });
+
+  it('errors clearly for an empty or missing folder', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'aac-'));
+    expect((await run('audit', dir)).out).toMatch(/No text files/);
+    expect((await run('audit', join(dir, 'missing'))).code).toBe(1);
   });
 });

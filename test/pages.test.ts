@@ -96,6 +96,15 @@ describe('multi-page', () => {
     expect(exportSite(editor)[0]!.document).not.toContain('name="description"');
   });
 
+  it('securityHeaders adds a _headers file and requires external assets', () => {
+    const editor = make();
+    editor.Pages.getAll()[0]!.getMainComponent().components('<p>x</p>');
+    const files = exportSiteFiles(editor, { assets: 'external', securityHeaders: { connectOrigins: ['https://api.example.com', undefined] } });
+    expect(files._headers).toContain("connect-src 'self' https://api.example.com;");
+    expect(() => exportSiteFiles(editor, { securityHeaders: true })).toThrow(/assets: "external"/);
+    expect(exportSiteFiles(editor, { assets: 'external' })._headers).toBeUndefined();
+  });
+
   it('slugifies', () => {
     expect(slugify('Über Us!')).toBe('uber-us');
     expect(slugify('***')).toBe('page');

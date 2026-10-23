@@ -14,6 +14,9 @@ export type * from './types';
 export { sanitizeHtml, createFetchGenerator, runAiGeneration, DEFAULT_SYSTEM } from './ai';
 export { defaultComponents } from './defaults';
 export { baseCss } from './styles';
+export { scanFiles, assertSafe, redactSecrets, SecurityError, RULE_IDS } from './security/scan';
+export type { Finding, Severity } from './security/scan';
+export { securityHeaders, contentSecurityPolicy, originOf } from './security/headers';
 export { exportSite, exportSiteFiles, downloadSite, createZip, slugify } from './pages';
 export type { ExportedPage, ExportSiteOptions } from './pages';
 

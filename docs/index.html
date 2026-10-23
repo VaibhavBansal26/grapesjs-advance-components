@@ -14,6 +14,7 @@
     <a href="#generate">Generate</a>
     <a href="#usecases">Use cases</a>
     <a href="#integrate">Integrate</a>
+    <a href="#security">Security</a>
     <a href="playground.html">Playground</a>
     <a href="showcase.html">Showcase</a>
     <a href="https://www.npmjs.com/package/grapesjs-advance-components">npm</a>
@@ -39,6 +40,7 @@
   <a href="#payments">Stripe checkout</a>
   <a href="#forms">Forms</a>
   <a href="#pages">Multi-page sites</a>
+  <a href="#automation">Automation (n8n, CI)</a>
   <div class="group">Reference</div>
   <a href="#api">API &amp; events</a>
   <a href="#problems">Known problems</a>
@@ -462,8 +464,36 @@ const pages = exportSite(editor, { lang: 'en', siteName: 'Acme', description: 'W
 // [{ id, name, file: 'index.html', html, css, js, document }, ...]   (js = component scripts, e.g. checkout)
 
 const files = exportSiteFiles(editor);     // { 'index.html': '...', 'about.html': '...' }
+const safe  = exportSiteFiles(editor, { assets: 'external', securityHeaders: true });   // + .css/.js and a strict-CSP _headers file
 const zip = createZip(files);              // Uint8Array, no dependencies</code></pre>
 <p>Component scripts (such as the checkout button's) are included in every export, inline by default or as <code>.js</code> files with <code>assets: 'external'</code> (see <a href="#csp">strict CSP</a>). Pass <code>siteName</code> and <code>description</code> to get proper <code>&lt;title&gt;</code> tags (<code>About &middot; Acme</code>) and a meta description on every page. Page names are escaped in the title, and duplicate file names get a numeric suffix. Pages are stored in the normal GrapesJS project data, so any storage manager persists them.</p>
+
+<h2 id="automation">Automation: n8n, CI and any workflow tool</h2>
+<p>Everything the CLI does is also available as a small HTTP API, so n8n, Zapier, Make or a cron job can generate, build and audit sites without a human at a terminal.</p>
+<pre><code>export ANTHROPIC_API_KEY=...                       # stays on this machine
+export AAC_API_TOKEN="$(openssl rand -hex 24)"     # 24+ characters, required
+npx aac serve --root ./sites --port 8787           # http://127.0.0.1:8787</code></pre>
+<table>
+<tr><th>Request</th><th>Does</th></tr>
+<tr><td><code>GET /health</code></td><td>Liveness, no token needed.</td></tr>
+<tr><td><code>POST /v1/generate</code></td><td><code>{ slug, brief, template?, name?, accent?, theme?, formEndpoint?, paymentLink?, force? }</code> writes <code>sites/&lt;slug&gt;/</code> and returns pages, files and scanner notes.</td></tr>
+<tr><td><code>POST /v1/build</code></td><td><code>{ slug }</code> re-renders <code>project.json</code> to <code>public/</code>.</td></tr>
+<tr><td><code>POST /v1/audit</code></td><td><code>{ slug }</code> returns <code>{ passed, summary, findings }</code>.</td></tr>
+<tr><td><code>GET /v1/sites</code></td><td>Lists generated sites.</td></tr>
+<tr><td><code>GET /v1/sites/&lt;slug&gt;/bundle.zip</code></td><td>The <code>public/</code> folder as a zip, ready for a deploy step.</td></tr>
+</table>
+<p>Every call except <code>/health</code> needs <code>Authorization: Bearer $AAC_API_TOKEN</code>.</p>
+
+<h3>n8n</h3>
+<p><a href="https://github.com/VaibhavBansal26/grapesjs-advance-components/tree/main/examples/n8n"><code>examples/n8n/site-intake.workflow.json</code></a> is an importable workflow: <strong>webhook &rarr; generate &rarr; audit &rarr; respond</strong>. The token lives in an n8n Header Auth credential, never in the workflow file, and the webhook has its own header credential. The README next to it has the five setup steps.</p>
+<div class="note warn">The workflow is written from n8n's documented node formats and verified for structure by a test (valid connections, no secrets), but it has not been imported into a running n8n by the author. Import it and run it once with test data before relying on it. A dedicated n8n community node is possible later; it would have to be its own package.</div>
+
+<h3>CI</h3>
+<pre><code># .github/workflows/site.yml
+- run: npx aac build ./site                  # re-render from the committed project.json
+- run: npx aac audit ./site --strict         # fails the build on a leak or unsafe markup
+- run: your-deploy-tool ./site/public</code></pre>
+<p><code>aac audit</code> exits non-zero when it finds a high-severity problem (or a medium one with <code>--strict</code>) and supports <code>--json</code> for scripts. It scans <code>public/</code>, <code>project.json</code> and <code>aac.json</code>, or any folder you point it at.</p>
 
 <h2 id="api">API &amp; events</h2>
 <table>
@@ -476,6 +506,7 @@ const zip = createZip(files);              // Uint8Array, no dependencies</code>
 <tr><td><code>aac:form-submit</code>, <code>aac:form-success</code>, <code>aac:form-error</code></td><td>DOM events</td><td>From form blocks, on published pages. <code>aac:form-submit</code> is cancelable.</td></tr>
 <tr><td><code>exportSite</code>, <code>exportSiteFiles</code>, <code>downloadSite</code>, <code>createZip</code>, <code>slugify</code></td><td>functions</td><td>Site export helpers.</td></tr>
 <tr><td><code>sanitizeHtml</code>, <code>createFetchGenerator</code>, <code>runAiGeneration</code>, <code>DEFAULT_SYSTEM</code></td><td>functions</td><td>AI building blocks.</td></tr>
+<tr><td><code>scanFiles</code>, <code>assertSafe</code>, <code>redactSecrets</code>, <code>securityHeaders</code>, <code>contentSecurityPolicy</code></td><td>functions</td><td>The leak scanner and CSP generator, usable on any folder of static files.</td></tr>
 <tr><td><code>defaultComponents</code></td><td>const</td><td>The built-in block list, for extending.</td></tr>
 </table>
 <p>Everything is typed; the full option types ship in <code>dist/index.d.ts</code>.</p>
@@ -505,11 +536,30 @@ const zip = createZip(files);              // Uint8Array, no dependencies</code>
 <div class="note">If you only need a handful of blocks, <code>grapesjs-blocks-basic</code> is smaller. This package earns its place when you want accessible blocks <em>plus</em> AI, checkout or multi-page export in one tested bundle.</div>
 
 <h2 id="security">Security</h2>
+<p>The goal is that secrets cannot end up in generated sites, logs or browsers. No tool can promise zero leaks, so this is layered, fails closed, and is explicit about what it cannot cover.</p>
+<h3>What is enforced</h3>
+<table>
+<tr><th>Layer</th><th>What it does</th></tr>
+<tr><td>Keys stay in the environment</td><td><code>ANTHROPIC_API_KEY</code> and <code>AAC_API_TOKEN</code> are read from env, never from flags, never written to disk, never sent to a browser. The editor's &#10024; button calls the model through the local server.</td></tr>
+<tr><td>Output scanner (fail closed)</td><td>Before anything is written, <code>generate</code>, <code>build</code>, the editor's Save and Publish, and the API scan for Anthropic, OpenAI, Stripe secret, GitHub, AWS and Slack keys, private keys, credentials in URLs, secret-looking query parameters, <code>javascript:</code> URLs, inline handlers and plain-http forms. A high-severity finding stops the write (<code>422</code> over the API) and is shown redacted. <code>--allow &lt;rule&gt;</code> is the explicit opt-out.</td></tr>
+<tr><td>Log redaction</td><td>Errors are stripped of key formats and of the exact values of the keys in use, even if an upstream error echoes one.</td></tr>
+<tr><td>Strict CSP</td><td>Exports include a <code>_headers</code> file (Netlify, Cloudflare Pages): <code>script-src 'self'</code>, <code>style-src 'self'</code>, no <code>unsafe-inline</code> or <code>unsafe-eval</code>, <code>connect-src</code> limited to your form endpoint. Tested in a browser: the form and checkout still work, and an injected inline script, an inline handler, a third-party script and a request to an unlisted origin are all blocked.</td></tr>
+<tr><td>Closed-by-default servers</td><td><code>aac edit</code> and <code>aac serve</code> bind to loopback. <code>serve</code> requires a 24+ character bearer token (constant-time compare), throttles repeated failures, rejects browser requests, caps body size, runs one job at a time with an hourly limit, and confines each site to its own folder. <code>edit</code> rejects any foreign <code>Host</code> or <code>Origin</code>.</td></tr>
+<tr><td>Untrusted model output</td><td>The CLI escapes every model string and never inserts it as HTML. The editor's AI results go through an allowlist sanitizer. Checkout redirects are limited to approved hosts; form endpoints must be https.</td></tr>
+</table>
+<pre><code>npx aac audit ./site            # fail on high severity
+npx aac audit ./site --strict   # also fail on medium
+npx aac audit ./site --json     # for scripts</code></pre>
+
+<h3>What cannot be promised</h3>
 <ul>
-  <li><strong>Model output is untrusted.</strong> Before it reaches the canvas or exported HTML, an allowlist sanitizer removes <code>&lt;script&gt;</code>, <code>&lt;iframe&gt;</code>, <code>&lt;svg&gt;</code>, event-handler attributes, <code>javascript:</code> / <code>data:</code> / protocol-relative URLs and CSS <code>url()</code>.</li>
-  <li><strong>No keys in the browser.</strong> Keep provider and Stripe secret keys on your server and put auth and rate limits on your AI and checkout endpoints.</li>
-  <li><strong>Checkout redirects are allowlisted</strong> (see above).</li>
+  <li><strong>Everything in a static site is public.</strong> Form endpoints, Payment Links and publishable keys are visible to every visitor by design. The scanner warns about URLs that look like credentials, but it cannot know that an ordinary-looking URL is secret.</li>
+  <li><strong>A webhook URL is a bearer capability.</strong> If a public form posts straight to an n8n webhook, anyone can trigger that workflow. Put your own server in between, and keep privileged workflows off public webhooks.</li>
+  <li><strong>The scanner is a heuristic.</strong> It recognises common token formats, not every possible secret.</li>
+  <li><strong>Your brief goes to the model provider.</strong> Do not put confidential information in prompts.</li>
+  <li><strong>Do not expose <code>aac serve</code> to the internet</strong> without TLS and a firewall in front.</li>
 </ul>
+<p>Report vulnerabilities privately through GitHub (Security &rarr; Report a vulnerability); see <a href="https://github.com/VaibhavBansal26/grapesjs-advance-components/blob/main/SECURITY.md">SECURITY.md</a>.</p>
 
 <h2 id="migrating">Migrating from v1</h2>
 <ul>

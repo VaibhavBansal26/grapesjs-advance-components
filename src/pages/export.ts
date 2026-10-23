@@ -1,4 +1,5 @@
 import type { Editor } from 'grapesjs';
+import { securityHeaders, type SecurityHeaderOptions } from '../security/headers';
 import { escapeHtml } from '../utils';
 
 export interface ExportedPage {
@@ -28,6 +29,11 @@ export interface ExportSiteOptions {
   siteName?: string;
   /** Written to `<meta name="description">` on every page. */
   description?: string;
+  /**
+   * Also write a `_headers` file (Netlify and Cloudflare Pages) with a strict Content-Security-Policy
+   * and other hardening headers. Needs `assets: 'external'`, because the policy forbids inline code.
+   */
+  securityHeaders?: boolean | SecurityHeaderOptions;
 }
 
 export const slugify = (name: string): string =>
@@ -97,6 +103,9 @@ ${script}
  * With `assets: 'external'` it also contains the `<slug>.css` and `<slug>.js` files.
  */
 export function exportSiteFiles(editor: Editor, opts?: ExportSiteOptions): Record<string, string> {
+  if (opts?.securityHeaders && opts.assets !== 'external') {
+    throw new Error('securityHeaders needs assets: "external": the policy forbids the inline code of an inline export.');
+  }
   const files: Record<string, string> = {};
   for (const p of exportSite(editor, opts)) {
     files[p.file] = p.document;
@@ -106,5 +115,6 @@ export function exportSiteFiles(editor: Editor, opts?: ExportSiteOptions): Recor
       if (p.js) files[`${base}.js`] = p.js;
     }
   }
+  if (opts?.securityHeaders) files._headers = securityHeaders(typeof opts.securityHeaders === 'object' ? opts.securityHeaders : {});
   return files;
 }

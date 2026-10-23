@@ -4,6 +4,8 @@ import { createRequire } from 'node:module';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { originOf, securityHeaders } from '../security/headers';
+import { assertSafe, SecurityError } from '../security/scan';
 import type { SiteOptions } from './generate';
 import type { Provider } from './provider';
 
@@ -44,6 +46,16 @@ async function readJson(req: IncomingMessage): Promise<any> {
   } catch (err) {
     if (err instanceof HttpError) throw err;
     throw new HttpError(400, 'Invalid JSON');
+  }
+}
+
+/** Refuse (422) anything the scanner blocks. The message lists redacted findings only. */
+function guard(files: Record<string, string>, allow?: string[]) {
+  try {
+    assertSafe(files, { allow });
+  } catch (err) {
+    if (err instanceof SecurityError) throw new HttpError(422, err.message);
+    throw err;
   }
 }
 
@@ -177,6 +189,7 @@ export async function startEditor(o: EditorServerOptions): Promise<{ url: string
     if (method === 'PUT' && path === '/project') {
       const data = await readJson(req);
       if (!data || typeof data !== 'object' || !Array.isArray(data.pages)) throw new HttpError(400, 'Not a GrapesJS project');
+      guard({ 'project.json': JSON.stringify(data) }, o.site.allow);
       const tmp = `${projectFile}.tmp`;
       await writeFile(tmp, JSON.stringify(data, null, 2));
       await rename(tmp, projectFile);
@@ -190,8 +203,11 @@ export async function startEditor(o: EditorServerOptions): Promise<{ url: string
       for (const [name, content] of entries) {
         if (!FILE_NAME.test(name) || typeof content !== 'string') throw new HttpError(400, `Rejected file name: ${name}`);
       }
+      guard(Object.fromEntries(entries.map(([n, c]) => [n, c as string])), o.site.allow);
       await mkdir(publicDir, { recursive: true });
       for (const [name, content] of entries) await writeFile(join(publicDir, name), content as string);
+      // Written by the server, never taken from the browser: the strict CSP for the published pages.
+      await writeFile(join(publicDir, '_headers'), securityHeaders({ connectOrigins: [originOf(o.site.formEndpoint)] }));
       return json(res, 200, { written: entries.map(([n]) => n) });
     }
 
