@@ -31,6 +31,25 @@
       ' mode) This text came from the demo provider. Wire up a real model with <code>ai.generate</code>.</p></section>';
   };
 
+  // A component made with defineComponent: drag "Testimonial" from the Social proof category.
+  const testimonial = GrapesjsAdvanceComponents.defineComponent({
+    id: 'demo-testimonial',
+    label: 'Testimonial',
+    category: 'Social proof',
+    icon: '\u{1F4AC}',
+    html: '<figure class="demo-testimonial"><blockquote>Tell people what changed for you.</blockquote><figcaption>Name, Role</figcaption></figure>',
+    editable: ['blockquote', 'figcaption'],
+    traits: {
+      tone: { type: 'select', label: 'Tone', options: ['light', 'dark'], default: 'light',
+              bind: { class: { light: 'demo-testimonial--light', dark: 'demo-testimonial--dark' } } },
+    },
+    css: '.demo-testimonial{margin:24px;padding:24px;border-left-width:4px;border-left-style:solid;border-left-color:var(--aac-accent,#4f46e5);border-radius:8px}' +
+         '.demo-testimonial--light{background-color:#f8fafc;color:#0f172a}' +
+         '.demo-testimonial--dark{background-color:#0f172a;color:#f8fafc}' +
+         '.demo-testimonial blockquote{margin:0 0 8px;font-size:1.1rem}' +
+         '.demo-testimonial figcaption{font-size:.9rem;opacity:.75}',
+  });
+
   window.editor = grapesjs.init({
     container: '#gjs',
     height: '100%',
@@ -39,6 +58,7 @@
     pluginsOpts: {
       'grapesjs-advance-components': {
         ai: { generate: demoModel },
+        custom: [testimonial],
         components: [
           { label: 'Buy', name: 'checkout', category: 'Commerce', componentType: 'checkout',
             checkoutElement: { mode: 'link', url: 'https://buy.stripe.com/test_replace_me', buttonText: 'Buy now' } },

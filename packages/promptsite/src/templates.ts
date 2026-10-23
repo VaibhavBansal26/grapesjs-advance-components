@@ -1,4 +1,4 @@
-import { CHECKOUT_TYPE, escapeHtml as e } from 'grapesjs-advance-components';
+import { escapeHtml as e } from 'grapesjs-advance-components';
 import type { CopyKey, SiteCopy } from './copy';
 
 /** A piece of page content: an HTML string, or a GrapesJS component definition (for pieces that carry props). */
@@ -61,7 +61,7 @@ const pricing = (c: SiteCopy, ctx: RenderContext): Item => ({
       `<p class="aac-pricing-price">${e(p.price)}${p.period ? `<small>${e(p.period)}</small>` : ''}</p>`,
       `<ul>${p.features.map((f) => `<li>${e(f)}</li>`).join('')}</ul>`,
       ctx.paymentLink
-        ? { type: CHECKOUT_TYPE, content: e(p.cta), mode: 'link', url: ctx.paymentLink }
+        ? `<button type="button" class="aac-button aac-checkout" data-mode="link" data-url="${e(ctx.paymentLink)}">${e(p.cta)}</button>`
         : `<a class="aac-button" href="page:contact">${e(p.cta)}</a>`,
     ],
   })),

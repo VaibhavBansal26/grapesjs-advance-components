@@ -158,6 +158,29 @@ The contact form and newsletter blocks validate, include a honeypot, show live s
 
 The checkout button redirects to a Stripe-hosted page (a Payment Link, or a Checkout Session your backend creates). Card data never touches your page and no secret key is involved. Redirects are restricted to `payments.allowedHosts` (default `checkout.stripe.com`, `buy.stripe.com`) and the button emits cancelable `aac:checkout` / `aac:checkout-error` events. See the [docs](https://vaibhavbansal26.github.io/grapesjs-advance-components/#payments).
 
+## Build your own component
+
+`defineComponent` turns HTML into a GrapesJS component with a block, trait-panel settings, CSS and an optional page script. Settings live in the markup, so they survive export and re-import.
+
+```js
+import { defineComponent } from 'grapesjs-advance-components';
+
+const testimonial = defineComponent({
+  id: 'acme-testimonial',
+  label: 'Testimonial',
+  html: '<figure class="acme-testimonial acme-testimonial--light"><blockquote>Quote</blockquote><figcaption>Name</figcaption></figure>',
+  editable: ['blockquote', 'figcaption'],
+  traits: {
+    tone: { type: 'select', options: ['light', 'dark'], default: 'light',
+            bind: { class: { light: 'acme-testimonial--light', dark: 'acme-testimonial--dark' } } },
+  },
+});
+
+// plugin options: { custom: [testimonial] }
+```
+
+Test helpers (`testRoundTrip`, `verifyScript`, `assertCss`, `mountComponent`) are in `grapesjs-advance-components/testing`. Full guide: [Build your own component](https://vaibhavbansal26.github.io/grapesjs-advance-components/#define).
+
 ## Multi-page sites
 
 A Pages button in the editor opens a manager (add, rename, switch, delete, download). Link pages with `href="page:about"`. From code:

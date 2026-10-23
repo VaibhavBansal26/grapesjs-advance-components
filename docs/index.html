@@ -42,6 +42,8 @@
   <a href="#forms">Forms</a>
   <a href="#pages">Multi-page sites</a>
   <a href="#automation">Automation (n8n, CI)</a>
+  <div class="group">Build your own</div>
+  <a href="#define">defineComponent</a>
   <div class="group">Reference</div>
   <a href="#api">API &amp; events</a>
   <a href="#problems">Known problems</a>
@@ -305,6 +307,7 @@ node examples/render-site.mjs project.json ./out      # writes index.html, prici
 <tr><td><code>i18n</code></td><td><code>{}</code></td><td>Extra messages per locale, merged over the English defaults.</td></tr>
 <tr><td><code>ai</code></td><td>off</td><td><code>{ generate }</code> enables AI block generation. See <a href="#ai">AI generation</a>.</td></tr>
 <tr><td><code>payments</code></td><td><code>{}</code></td><td><code>{ allowedHosts }</code> for the checkout button. See <a href="#payments">Stripe checkout</a>.</td></tr>
+<tr><td><code>custom</code></td><td><code>[]</code></td><td>Your own components made with <code>defineComponent</code>. See <a href="#define">Build your own component</a>.</td></tr>
 <tr><td><code>pages</code></td><td><code>true</code></td><td><code>false</code> disables the page manager; <code>{ panel: false }</code> hides the panel button only.</td></tr>
 </table>
 <pre><code>pluginsOpts: {
@@ -372,7 +375,7 @@ node examples/render-site.mjs project.json ./out      # writes index.html, prici
 <div class="note">Two GrapesJS behaviours shaped this stylesheet, and both are enforced by tests. Its CSS parser silently drops a shorthand such as <code>background: var(&hellip;)</code> or <code>border-color: var(&hellip;)</code>, so custom properties only appear in longhand properties. And it keeps only the <em>last</em> rule for a selector, so each selector is declared exactly once. If you add your own rules through <code>editor.Css</code>, the same two rules apply.</div>
 
 <h2 id="progress">Progress bar</h2>
-<p>A real component (<code>aac-progress-bar</code>) with <code>percentage</code> (0&ndash;100, clamped) and <code>color</code> traits. The bar uses your <code>--aac-accent</code> until you pick a colour. State lives in the inner element's style and <code>aria-valuenow</code> stays in sync, so exported HTML needs no script. Saved HTML is recognised again when loaded.</p>
+<p>A real component (<code>aac-progress-bar</code>, made with <a href="#define">defineComponent</a>) with <code>percentage</code> (0&ndash;100, clamped) and <code>color</code> traits. The bar uses your <code>--aac-accent</code> until you pick a colour. State lives in the inner element's style and <code>aria-valuenow</code> stays in sync, so exported HTML needs no script. Saved HTML is recognised again when loaded.</p>
 
 <h2 id="ai">AI block generation</h2>
 <p>Describe what you want ("pricing FAQ for a project-management SaaS") and it lands on the canvas as editable components, inserted below the selection or replacing it. Undo works as usual. <strong>You provide the model call</strong>, so there is no vendor lock-in and no API key in the browser.</p>
@@ -421,6 +424,7 @@ payments: { allowedHosts: ['checkout.stripe.com', 'buy.stripe.com'] }   // defau
 <ul>
   <li>Redirects only go to <code>https</code> hosts in <code>allowedHosts</code>; anything else is blocked and reported (<code>https://buy.stripe.com.evil.com</code> is rejected). Add your host if you use a custom Checkout domain.</li>
   <li>The button is inert inside the editor canvas.</li>
+  <li>Its settings are <code>data-mode</code>, <code>data-url</code>, <code>data-endpoint</code>, <code>data-price-id</code> and <code>data-quantity</code> on the <code>&lt;button&gt;</code>, so a saved or generated page keeps them without any extra state. The allow-list is embedded in the script.</li>
   <li>Cancelable events bubble from the button: <code>aac:checkout</code> (<code>detail.url</code>; call <code>preventDefault()</code> to take over the redirect or send analytics) and <code>aac:checkout-error</code> (<code>detail.message</code>).</li>
   <li>While a session request is in flight the button has <code>aria-busy="true"</code>; errors show through <code>data-error</code>.</li>
 </ul>
@@ -504,6 +508,113 @@ npx promptsite serve --root ./sites --port 8787           # http://127.0.0.1:878
 - run: your-deploy-tool ./site/public</code></pre>
 <p><code>promptsite audit</code> exits non-zero when it finds a high-severity problem (or a medium one with <code>--strict</code>) and supports <code>--json</code> for scripts. It scans <code>public/</code>, <code>project.json</code> and <code>promptsite.json</code>, or any folder you point it at.</p>
 
+<h2 id="define">Build your own component</h2>
+<p><code>defineComponent</code> turns a piece of HTML into a GrapesJS component with a block, settings in the trait panel, CSS and an optional runtime script. It is the same API the Progress bar, Quote, Hero and Checkout blocks are built with. <strong>The HTML is the source of truth</strong>: every setting lives in the markup, so it survives export, re-import and <code>promptsite build</code> with no extra work.</p>
+
+<h3>1. A static block</h3>
+<pre><code>import { defineComponent } from 'grapesjs-advance-components';
+
+export const testimonial = defineComponent({
+  id: 'acme-testimonial',            // unique type id: prefix it
+  label: 'Testimonial',
+  category: 'Social proof',
+  icon: '&#128172;',                    // SVG markup, or a short text such as an emoji
+  html: `&lt;figure class="acme-testimonial acme-testimonial--round"&gt;
+    &lt;blockquote&gt;Tell people what changed for you.&lt;/blockquote&gt;
+    &lt;figcaption&gt;Name, Role&lt;/figcaption&gt;
+  &lt;/figure&gt;`,
+  editable: ['blockquote', 'figcaption'],   // double-click to edit these
+  css: `.acme-testimonial{margin:24px 0;padding:24px;border-left-width:4px;border-left-style:solid;border-left-color:var(--aac-accent,#4f46e5)}`,
+});
+
+grapesjs.init({
+  plugins: [advanceComponents],
+  pluginsOpts: { [advanceComponents]: { custom: [testimonial] } },
+});</code></pre>
+<p>That registers the component type, a <code>acme-testimonial-block</code> block and the CSS. The CSS is only exported on pages that use the component. Use one root element; saved HTML is recognised again by the root's first class (change that with <code>detect</code>).</p>
+
+<h3>2. Settings (traits)</h3>
+<pre><code>traits: {
+  tone:    { type: 'select', options: ['light', 'dark'], default: 'light',
+             bind: { class: { light: 'acme-testimonial--light', dark: 'acme-testimonial--dark' } } },
+  rounded: { type: 'checkbox', default: true, bind: { classIf: 'acme-testimonial--round' } },
+  accent:  { type: 'color', bind: { cssVar: '--aac-accent' } },
+}</code></pre>
+<p>For <code>class</code> and <code>classIf</code> the markup decides the starting value: put the class in your <code>html</code> to start with it on.</p>
+<p>Without a <code>bind</code> a trait is stored as a <code>data-&lt;name&gt;</code> attribute on the root (<code>priceId</code> becomes <code>data-price-id</code>). A trait can have several binds, for example the Progress bar writes its percentage to both a width and <code>aria-valuenow</code>.</p>
+<table>
+<tr><th>Bind</th><th>Writes</th><th>Readable by a page script</th></tr>
+<tr><td><code>{ attr: 'aria-valuenow', on? }</code></td><td>an attribute</td><td>yes</td></tr>
+<tr><td><code>{ text: '.name' }</code></td><td>the text of the matching element</td><td>yes</td></tr>
+<tr><td><code>{ class: { value: 'class-name' }, on? }</code></td><td>one class per option; the others are removed</td><td>yes</td></tr>
+<tr><td><code>{ classIf: 'is-on', on? }</code></td><td>a class when a checkbox is checked</td><td>yes</td></tr>
+<tr><td><code>{ style: 'width', unit?: '%', on? }</code></td><td>an inline style on the element</td><td>no</td></tr>
+<tr><td><code>{ cssVar: '--x', on? }</code></td><td>a custom property in the inline style</td><td>no</td></tr>
+</table>
+<p><code>on</code> is a selector relative to the root and defaults to the root itself. Trait types are <code>text</code>, <code>number</code> (<code>min</code>, <code>max</code> clamp the value written), <code>select</code>, <code>checkbox</code> and <code>color</code>. Set <code>ui: false</code> to keep a setting out of the panel.</p>
+<p>Read and write a setting from code with <code>testimonial.get(component, 'tone')</code> and <code>testimonial.set(component, 'tone', 'dark')</code>. Both are typed by the trait names.</p>
+
+<h3>3. A script on the published page</h3>
+<pre><code>defineComponent({
+  id: 'acme-counter',
+  label: 'Counter',
+  html: '&lt;button type="button" class="acme-counter" data-start="0"&gt;0&lt;/button&gt;',
+  traits: { start: { type: 'number', default: 0 } },
+  consts: { max: 10 },                          // JSON values embedded in the script
+  script({ el, props, consts, inEditor, emit }) {
+    let n = props.start;                        // typed from the traits
+    el.addEventListener('click', () =&gt; {
+      if (inEditor) return;                     // true inside the editor canvas
+      n = Math.min(n + 1, consts.max as number);
+      el.textContent = String(n);
+      emit('acme:count', { n });                // bubbling CustomEvent from el
+    });
+  },
+});</code></pre>
+<p>The script is copied into the exported page as text, so it must be <strong>self-contained</strong>: no imports and no variables from outside the function. Anything it needs goes through <code>props</code> (read from the markup when the page loads) or <code>consts</code>. It does not run in the editor canvas unless you set <code>runInEditor: true</code>. <code>props</code> only holds settings a page can read back; a trait bound only to <code>style</code> or <code>cssVar</code> is left out, and the types reflect that.</p>
+
+<h3>4. Controlling editing</h3>
+<table>
+<tr><th>Field</th><th>Effect</th></tr>
+<tr><td><code>editable: ['h1', 'p']</code></td><td>Those children become rich text.</td></tr>
+<tr><td><code>locked: true</code></td><td>Children cannot be dragged, removed, copied or dropped into, except <code>editable</code> and <code>repeat</code> parts.</td></tr>
+<tr><td><code>repeat: ['.faq-item']</code></td><td>Users can add, copy, remove and reorder these children; their parent only accepts drops of the same kind.</td></tr>
+<tr><td><code>droppable</code>, <code>removable</code>, <code>copyable</code></td><td>Passed to GrapesJS for the root.</td></tr>
+<tr><td><code>extend: 'text'</code></td><td>Build on another GrapesJS type. <code>'text'</code> makes the whole root editable text, as the Quote and Checkout blocks do.</td></tr>
+<tr><td><code>block: false</code> or <code>{ id, label, category }</code></td><td>Skip the block, or rename it.</td></tr>
+</table>
+
+<h3>5. Selectors</h3>
+<p>Selectors in <code>bind.on</code>, <code>editable</code> and <code>repeat</code> support a small subset, checked when you call <code>defineComponent</code>: a tag, <code>.class</code>, <code>#id</code>, <code>[attr]</code>, <code>[attr=value]</code>, combinations of those, descendant (space) and child (<code>&gt;</code>). A selector that matches nothing in your HTML is an error with the component id in the message, so typos fail at startup rather than silently.</p>
+
+<h3>6. Test it</h3>
+<pre><code>import { testRoundTrip, verifyScript, assertCss, mountComponent } from 'grapesjs-advance-components/testing';
+
+it('keeps its settings through export and reload', () =&gt; testRoundTrip(testimonial, { tone: 'dark' }));
+it('has a self-contained script', () =&gt; verifyScript(counter));
+it('has CSS GrapesJS will keep', () =&gt; assertCss(testimonial));
+it('works', () =&gt; {
+  const m = mountComponent(testimonial, { values: { tone: 'dark' } });
+  expect(m.html()).toContain('acme-testimonial--dark');
+});</code></pre>
+<table>
+<tr><th>Helper</th><th>Does</th></tr>
+<tr><td><code>createTestEditor(setup?, projectData?)</code></td><td>A headless editor, optionally set up by your plugin and loaded with project data.</td></tr>
+<tr><td><code>mountComponent(def, { values?, editor? })</code></td><td>Installs the definition and creates one component. Returns <code>get</code>, <code>set</code>, <code>html()</code>, <code>css()</code>, <code>el()</code>.</td></tr>
+<tr><td><code>runScript(def, el, { inEditor? })</code></td><td>Runs the exported script on an element, the way the published page does.</td></tr>
+<tr><td><code>verifyScript(def)</code></td><td>Compiles the script on its own and runs it once; a reference to an outside variable becomes a clear error.</td></tr>
+<tr><td><code>assertCss(defOrString)</code></td><td>Throws on CSS that GrapesJS would change or drop (see below).</td></tr>
+<tr><td><code>testRoundTrip(def, values?)</code></td><td>Exports HTML and CSS, loads them into a fresh editor, and checks the type and every setting come back. Also reloads from project JSON.</td></tr>
+</table>
+
+<h3>Things to know</h3>
+<ul>
+  <li><strong>One rule per selector.</strong> GrapesJS keeps only the last CSS rule for a selector, so <code>defineComponent</code> reports a selector declared twice in <code>css</code>.</li>
+  <li><strong>No <code>var()</code> inside shorthands.</strong> GrapesJS drops shorthand properties such as <code>background</code> or <code>border</code> when they contain <code>var(&hellip;)</code>. Use longhand (<code>background-color</code>, <code>border-left-color</code>). The same check runs on the built-in stylesheet.</li>
+  <li><strong>Unique ids.</strong> Installing a different definition under an id that is already registered, or one that clashes with a GrapesJS type, throws instead of overwriting it. Installing the same definition twice is harmless.</li>
+  <li><strong>Block overrides.</strong> The plugin's <code>components</code> option can still rename or hide the built-in blocks (<code>visible: false</code>); for your own, use <code>block</code>.</li>
+</ul>
+
 <h2 id="api">API &amp; events</h2>
 <table>
 <tr><th>Name</th><th>Kind</th><th>Purpose</th></tr>
@@ -516,6 +627,8 @@ npx promptsite serve --root ./sites --port 8787           # http://127.0.0.1:878
 <tr><td><code>exportSite</code>, <code>exportSiteFiles</code>, <code>downloadSite</code>, <code>createZip</code>, <code>slugify</code></td><td>functions</td><td>Site export helpers.</td></tr>
 <tr><td><code>sanitizeHtml</code>, <code>createFetchGenerator</code>, <code>runAiGeneration</code>, <code>DEFAULT_SYSTEM</code></td><td>functions</td><td>AI building blocks.</td></tr>
 <tr><td><code>scanFiles</code>, <code>assertSafe</code>, <code>redactSecrets</code>, <code>securityHeaders</code>, <code>contentSecurityPolicy</code></td><td>functions</td><td>The leak scanner and CSP generator, usable on any folder of static files.</td></tr>
+<tr><td><code>defineComponent</code>, <code>propKey</code>, <code>DefineComponentError</code>, <code>validateCss</code>, <code>assertCss</code>, <code>queryComponents</code></td><td>functions</td><td>The component authoring API. See <a href="#define">Build your own component</a>.</td></tr>
+<tr><td><code>createTestEditor</code>, <code>mountComponent</code>, <code>runScript</code>, <code>verifyScript</code>, <code>assertCss</code>, <code>testRoundTrip</code></td><td>functions</td><td>Test helpers, imported from <code>grapesjs-advance-components/testing</code>.</td></tr>
 <tr><td><code>defaultComponents</code></td><td>const</td><td>The built-in block list, for extending.</td></tr>
 </table>
 <p>Everything is typed; the full option types ship in <code>dist/index.d.ts</code>.</p>

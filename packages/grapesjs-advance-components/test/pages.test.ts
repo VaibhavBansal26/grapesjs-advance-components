@@ -57,12 +57,13 @@ describe('multi-page', () => {
 
   it('includes component scripts so exported checkout buttons work', () => {
     const editor = make();
-    editor.Pages.getAll()[0]!.getMainComponent().components([
-      { type: 'aac-checkout-button', url: 'https://buy.stripe.com/test_1' },
-    ]);
+    editor.Pages.getAll()[0]!.getMainComponent().components(
+      '<button type="button" class="aac-button aac-checkout" data-url="https://buy.stripe.com/test_1">Buy</button>',
+    );
     const [home] = exportSite(editor);
     expect(home!.js).toContain('aac:checkout');
-    expect(home!.js).toContain('https://buy.stripe.com/test_1');
+    expect(home!.js).toContain('buy.stripe.com'); // the redirect allow-list travels with the script
+    expect(home!.document).toContain('data-url="https://buy.stripe.com/test_1"'); // the setting travels in the markup
     expect(home!.document).toMatch(/<script>[\s\S]*aac:checkout[\s\S]*<\/script>/);
   });
 
