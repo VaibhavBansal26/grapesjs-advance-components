@@ -233,11 +233,26 @@ describe('generate, build, audit', () => {
 describe('abuse limits', () => {
   it('runs one job at a time', async () => {
     let release: () => void = () => {};
-    const slow: Provider = { label: 'slow', complete: () => new Promise((res) => (release = () => res(JSON.stringify(sampleCopy('x'))))) };
+    let entered: () => void = () => {};
+    const started = new Promise<void>((resolve) => (entered = resolve));
+    const slow: Provider = {
+      label: 'slow',
+      complete: () =>
+        new Promise((res) => {
+          release = () => res(JSON.stringify(sampleCopy('x')));
+          entered();
+        }),
+    };
     await boot({ provider: slow });
     const first = gen({ slug: 'one' });
-    await vi.waitFor(async () => expect((await gen({ slug: 'two' })).status).toBe(429));
-    release();
+    try {
+      // Wait until 'one' is really the running job. Firing both requests back to back would let
+      // 'two' win the race on a slow machine, and then the probe itself would hang.
+      await started;
+      expect((await gen({ slug: 'two' })).status).toBe(429);
+    } finally {
+      release(); // never leave a request hanging, even if the assertion above fails
+    }
     expect((await first).status).toBe(200);
     expect(await readdir(root)).toEqual(['one']);
   });
@@ -256,5 +271,18 @@ describe('abuse limits', () => {
     await boot({ maxPerHour: 1 });
     expect((await gen({ slug: '../x' })).status).toBe(400);
     expect((await gen({ slug: 'ok' })).status).toBe(200);
+  });
+});
+
+describe('shutdown', () => {
+  it('does not wait for a request stuck in a model call', async () => {
+    let entered: () => void = () => {};
+    const started = new Promise<void>((resolve) => (entered = resolve));
+    await boot({ provider: { label: 'hung', complete: () => new Promise(() => entered()) } });
+    void gen({ slug: 'stuck' }).catch(() => {}); // never resolves: the connection is dropped on close
+    await started;
+    const t0 = Date.now();
+    await close();
+    expect(Date.now() - t0).toBeLessThan(2000);
   });
 });
