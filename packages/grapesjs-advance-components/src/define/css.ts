@@ -15,11 +15,22 @@ export interface CssIssue {
   message: string;
 }
 
+/**
+ * Properties whose value GrapesJS loses when it contains var(). Checked in Chrome against GrapesJS 0.22
+ * (its default CSS parser is the browser's): each of these comes back as empty longhands, while longhands
+ * such as `color`, `background-color`, `border-left-color` and `box-shadow` keep their var().
+ */
 const SHORTHANDS = new Set([
   'background', 'border', 'border-top', 'border-right', 'border-bottom', 'border-left', 'border-color', 'border-style',
   'border-width', 'border-radius', 'border-image', 'margin', 'padding', 'font', 'outline', 'flex', 'flex-flow', 'gap',
   'grid', 'grid-area', 'grid-template', 'inset', 'overflow', 'transition', 'animation', 'list-style', 'text-decoration',
   'columns', 'place-items', 'place-content', 'place-self', 'mask',
+  'animation-range', 'background-position', 'border-block', 'border-block-color', 'border-block-start', 'border-inline',
+  'border-inline-start', 'border-inline-width', 'border-spacing', 'column-rule', 'contain-intrinsic-size', 'container',
+  'corner-shape', 'font-synthesis', 'font-variant', 'grid-column', 'grid-gap', 'grid-row', 'inset-block', 'inset-inline',
+  'margin-block', 'margin-inline', 'marker', 'offset', 'overscroll-behavior', 'padding-block', 'padding-inline',
+  'position-try', 'scroll-margin', 'scroll-margin-block', 'scroll-padding', 'scroll-timeline', 'text-box',
+  'text-emphasis', 'text-wrap', 'view-timeline', 'white-space',
 ]);
 
 interface Rule {

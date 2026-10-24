@@ -13,6 +13,12 @@ describe('validateCss', () => {
     ['font', '.a{font:var(--f)}'],
     ['outline', '.a{outline:2px solid var(--o)}'],
     ['gap', '.a{gap:var(--g)}'],
+    ['padding-inline', '.a{padding-inline:var(--p)}'],
+    ['margin-block', '.a{margin-block:var(--m)}'],
+    ['grid-row', '.a{grid-row:var(--r)}'],
+    ['white-space', '.a{white-space:var(--w)}'],
+    ['scroll-padding', '.a{scroll-padding:var(--s)}'],
+    ['column-rule', '.a{column-rule:1px solid var(--c)}'],
   ])('flags a shorthand with var(): %s', (property, css) => {
     const issues = validateCss(css);
     expect(issues).toHaveLength(1);

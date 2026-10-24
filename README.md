@@ -9,6 +9,10 @@ A monorepo with two npm packages that work together.
 
 📖 **[Documentation](https://vaibhavbansal26.github.io/grapesjs-advance-components/)** · 🧪 **[Playground](https://vaibhavbansal26.github.io/grapesjs-advance-components/playground.html)** · 🎨 **[Block showcase](https://vaibhavbansal26.github.io/grapesjs-advance-components/showcase.html)**
 
+![Generate a site from one sentence, edit it visually, publish it](https://raw.githubusercontent.com/VaibhavBansal26/grapesjs-advance-components/main/docs/assets/demo.gif)
+
+*Real recording of the CLI and editor, using the offline `--provider mock` so no API key is needed. With a key, the model writes the copy.*
+
 **Embedding an editor in your own app?** Use the plugin.
 **Want a finished site from a prompt, or an automation (n8n, CI)?** Use `promptsite`.
 `promptsite` depends on the plugin; the plugin never depends on it, so embedders carry no CLI or server code.
