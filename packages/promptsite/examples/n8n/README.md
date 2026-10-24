@@ -30,3 +30,13 @@
 - **A webhook URL is public.** Anyone who learns it can call it, so the Webhook node requires its own header credential, and a browser form should post to *your* server, which calls n8n, not to the n8n URL directly.
 - **`promptsite serve` is not an internet service.** Keep it on `127.0.0.1` or a private network. If you must expose it, put TLS and a firewall in front.
 - `generate` and `build` refuse to write a site that contains a secret (the response is `422` with redacted findings), and `/v1/audit` re-checks any site on demand.
+
+## Publishing the site
+
+The workflow stops at generating and auditing. To publish, add an **Execute Command** node after the audit step (n8n must run on a machine with Node 22+ and `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` or `NETLIFY_AUTH_TOKEN` in its environment):
+
+```
+npx promptsite deploy /data/sites/{{ $json.slug }} --to netlify --project {{ $env.NETLIFY_SITE_ID }} --prod
+```
+
+`promptsite deploy` audits again and refuses to upload a site with a leaked key. This step is not part of the shipped workflow file and has not been run in a live n8n.

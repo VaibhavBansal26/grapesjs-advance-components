@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { formatFindings, redactSecrets, scanFiles, type Finding } from 'grapesjs-advance-components';
 import { collectAuditFiles } from './collect';
+import { childEnvironment, display, missingEnv, nodeMajor, planDeploy, spawnRunner, type Runner } from './deploy';
 import { startEditor } from './edit';
 import { checkToken, startApi } from './serve';
 import { exportProject, generateSite, validateOptions, type SiteOptions } from './generate';
@@ -17,6 +18,7 @@ const HELP = `promptsite: generate, edit and build sites with GrapesJS
   promptsite build <dir>                    Re-export <dir>/project.json to <dir>/public
   promptsite serve --root <dir>             HTTP API for n8n, Zapier or cron (needs PROMPTSITE_API_TOKEN)
   promptsite audit <dir>                    Scan a site or project folder for leaked secrets and unsafe markup
+  promptsite deploy <dir> --to <host>       Audit, then publish to Cloudflare Pages or Netlify
   promptsite templates                      List the templates
 
 generate options
@@ -49,6 +51,16 @@ audit options
   --strict               also fail on medium findings (default: fail on high)
   --json                 machine-readable output
 
+deploy options (the audit runs first and a high-severity finding stops the deploy)
+  --to cloudflare|netlify   where to publish
+  --project <name>       Cloudflare: Pages project name. Netlify: site ID (or NETLIFY_SITE_ID)
+  --branch <name>        Cloudflare: branch to deploy; the project's production branch goes live
+  --prod                 Netlify: deploy to production (default is a draft URL)
+  --dry-run              show the command and what is missing, deploy nothing
+  --strict / --allow     as for audit
+  Cloudflare reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID, Netlify reads NETLIFY_AUTH_TOKEN, from the
+  environment. Tokens are never flags, so they stay out of shell history and process lists. Both hosts' tools need Node 22+.
+
 Your API key is read from the environment and is never written anywhere.`;
 
 interface Args {
@@ -56,7 +68,7 @@ interface Args {
   flags: Record<string, string | true>;
 }
 
-const BOOLEAN_FLAGS = new Set(['force', 'help', 'version', 'strict', 'json']);
+const BOOLEAN_FLAGS = new Set(['force', 'help', 'version', 'strict', 'json', 'prod', 'dry-run']);
 
 export function parseArgs(argv: string[]): Args {
   const out: Args = { _: [], flags: {} };
@@ -134,8 +146,7 @@ async function build(a: Args) {
   console.log(`Wrote ${Object.keys(files).length} files to ${join(dir, 'public')}`);
 }
 
-async function audit(a: Args): Promise<number> {
-  const target = resolve(a._[1] ?? '.');
+async function scan(a: Args, target: string) {
   const files = await collectAuditFiles(target);
   if (!Object.keys(files).length) throw new Error(`No text files to scan in ${target}.`);
   const findings: Finding[] = scanFiles(files, { allow: str(a, 'allow')?.split(',').map((x) => x.trim()).filter(Boolean) });
@@ -144,7 +155,12 @@ async function audit(a: Args): Promise<number> {
     findings.push({ severity: 'low', rule: 'no-security-headers', file: '(site)', line: 0, message: 'No _headers file: add one with promptsite build to get a strict Content-Security-Policy', match: '' });
   }
   const failOn = a.flags.strict ? ['high', 'medium'] : ['high'];
-  const failing = findings.filter((f) => failOn.includes(f.severity));
+  return { files, findings, failing: findings.filter((f) => failOn.includes(f.severity)) };
+}
+
+async function audit(a: Args): Promise<number> {
+  const target = resolve(a._[1] ?? '.');
+  const { files, findings, failing } = await scan(a, target);
   const count = (sev: string) => findings.filter((f) => f.severity === sev).length;
   if (a.flags.json) {
     console.log(JSON.stringify({ scanned: Object.keys(files).length, summary: { high: count('high'), medium: count('medium'), low: count('low') }, passed: !failing.length, findings }, null, 2));
@@ -154,6 +170,40 @@ async function audit(a: Args): Promise<number> {
     console.log(`\n${count('high')} high, ${count('medium')} medium, ${count('low')} low. ${failing.length ? 'FAILED' : 'Passed'}${a.flags.strict ? ' (strict)' : ''}.`);
   }
   return failing.length ? 1 : 0;
+}
+
+const TOKEN_FLAGS = ['token', 'api-token', 'auth-token', 'auth', 'key', 'api-key'];
+
+/** Audit, then hand the folder to the host's own CLI. A leak blocks the deploy; credentials come from the environment only. */
+async function deploy(a: Args, runner: Runner): Promise<number> {
+  const bad = TOKEN_FLAGS.find((f) => f in a.flags);
+  if (bad) throw new Error(`--${bad} is not accepted: a token on the command line ends up in shell history and process lists. Set CLOUDFLARE_API_TOKEN or NETLIFY_AUTH_TOKEN in the environment instead.`);
+  const dir = a._[1] ?? '.';
+  const plan = planDeploy({ dir, to: str(a, 'to'), project: str(a, 'project') ?? str(a, 'site'), branch: str(a, 'branch'), prod: !!a.flags.prod });
+
+  const auditRoot = resolve(dir);
+  const { files, findings, failing } = await scan(a, auditRoot);
+  console.log(`Audit: scanned ${Object.keys(files).length} files, ${findings.filter((f) => f.severity === 'high').length} high, ${findings.filter((f) => f.severity === 'medium').length} medium, ${findings.filter((f) => f.severity === 'low').length} low.`);
+  if (failing.length) {
+    console.log(formatFindings(failing));
+    console.error(`Deploy stopped: ${failing.length} blocking finding(s). Fix them, or run promptsite audit ${dir} for details.`);
+    return 1;
+  }
+
+  const missing = missingEnv(plan);
+  console.log(`\n${a.flags['dry-run'] ? 'Would deploy' : 'Deploying'} ${plan.publicDir} to ${plan.label}${plan.production ? ' (PRODUCTION)' : ''}`);
+  console.log(`  ${display(plan)}`);
+  console.log(`  credentials from the environment: ${plan.requiredEnv.map((k) => `${k} ${missing.includes(k) ? '(not set)' : '(set)'}`).join(', ')}`);
+  if (a.flags['dry-run']) {
+    console.log('\nDry run: nothing was deployed.');
+    return missing.length ? 1 : 0;
+  }
+  if (missing.length) throw new Error(`Set ${missing.join(' and ')} in the environment, then run again. Create the token in your ${plan.label} account settings.`);
+  if (nodeMajor() < plan.minNode) throw new Error(`${plan.label}'s command line tool needs Node ${plan.minNode} or newer; this is Node ${nodeMajor()}.`);
+
+  const code = await runner(plan.command, plan.args, childEnvironment(plan));
+  console.log(code === 0 ? `\nDeployed to ${plan.label}.` : `\n${plan.label} deploy failed (exit ${code}).`);
+  return code === 0 ? 0 : 1;
 }
 
 async function serve(a: Args) {
@@ -189,7 +239,7 @@ async function edit(a: Args) {
   console.log(`Editing ${dir}\n  ${url}\n\nChanges save to project.json automatically. Press Publish in the editor to write ${join(dir, 'public')}.\nCtrl+C to stop.`);
 }
 
-export async function main(argv: string[]): Promise<number> {
+export async function main(argv: string[], deps: { runner?: Runner } = {}): Promise<number> {
   try {
     const a = parseArgs(argv);
     const cmd = a._[0];
@@ -207,6 +257,7 @@ export async function main(argv: string[]): Promise<number> {
       return 0;
     }
     if (cmd === 'audit') return await audit(a);
+    if (cmd === 'deploy') return await deploy(a, deps.runner ?? spawnRunner);
     if (cmd === 'generate') await generate(a);
     else if (cmd === 'build') await build(a);
     else if (cmd === 'edit' || cmd === 'serve') {
@@ -216,7 +267,7 @@ export async function main(argv: string[]): Promise<number> {
     return 0;
   } catch (err) {
     // Nothing that reaches the terminal may contain a key, even if an upstream error echoed one.
-    console.error(`promptsite: ${redactSecrets((err as Error).message, [process.env.ANTHROPIC_API_KEY, process.env.PROMPTSITE_API_TOKEN])}`);
+    console.error(`promptsite: ${redactSecrets((err as Error).message, [process.env.ANTHROPIC_API_KEY, process.env.PROMPTSITE_API_TOKEN, process.env.CLOUDFLARE_API_TOKEN, process.env.NETLIFY_AUTH_TOKEN])}`);
     return 1;
   }
 }
