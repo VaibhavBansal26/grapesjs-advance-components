@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/VaibhavBansal26/grapesjs-advance-components/compare/promptsite-v0.2.0...promptsite-v0.3.0) (2026-10-24)
+
+
+### Features
+
+* **promptsite:** add promptsite deploy for Cloudflare Pages and Netlify ([a485104](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/a4851046027de86df06b24a5caa53e12bff4e234))
+* **promptsite:** promptsite deploy for Cloudflare Pages and Netlify ([d076493](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/d0764932d3021502fcc04cedc180ce824da8fb3e))
+
+
+### Bug Fixes
+
+* **promptsite:** make the deploy Node check injectable; document a safe first deploy ([ae776d0](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/ae776d0ebc299f39b479718015174f76f423e005))
+
 ## [0.2.0](https://github.com/VaibhavBansal26/grapesjs-advance-components/compare/promptsite-v0.1.0...promptsite-v0.2.0) (2026-10-24)
 
 
