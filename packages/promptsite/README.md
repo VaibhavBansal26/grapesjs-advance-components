@@ -26,7 +26,7 @@ The model writes **validated JSON copy**, not markup. Templates render that copy
 | `promptsite serve --root <dir>` | HTTP API for n8n, Zapier or cron (needs `PROMPTSITE_API_TOKEN`) |
 | `promptsite templates` | List the templates |
 
-Templates: `landing` (Home, Pricing, Contact), `local-business` (Home, About, Contact), `shop` (Home with Stripe buttons, Contact).
+Templates: `landing` (Home, Pricing, Contact), `local-business` (Home, About, Contact), `small-business` (Home, Services, About, Journal, Contact: testimonials, pricing, FAQ, team and a blog list), `shop` (Home with Stripe buttons, Contact).
 
 Useful flags: `--name`, `--accent "#0d9488"`, `--theme dark`, `--payment-link <Stripe Payment Link>`, `--form-endpoint <url>`, `--provider anthropic|endpoint|mock`, `--endpoint <your backend>`, `--model <id>`. Run `promptsite --help` for all of them.
 

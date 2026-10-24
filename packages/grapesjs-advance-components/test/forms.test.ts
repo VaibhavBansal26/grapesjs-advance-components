@@ -1,6 +1,8 @@
 import grapesjs, { type Editor } from 'grapesjs';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import plugin, { type FormActionOptions } from '../src';
+import plugin from '../src';
+import { form as formDef } from '../src/builtin';
+import { runScript } from '../src/testing';
 
 let editors: Editor[] = [];
 function make() {
@@ -17,18 +19,18 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-/** Render the block's real markup into the page and run its runtime script on it, like a published page. */
-function mount(block: 'form-block' | 'newsletter-block', action: string, props: Record<string, unknown> = {}) {
+/** Render the block's real markup into the page and run its exported script on it, like a published page. */
+function mount(block: 'form-block' | 'newsletter-block', action: string, props: Record<string, string> = {}) {
   const editor = make();
-  const fa: FormActionOptions = { endpoint: action };
   const content = editor.Blocks.get(block)!.getContent() as Record<string, unknown>;
-  const [cmp] = editor.addComponents({ ...content, attributes: { ...(content.attributes as object), action: fa.endpoint } });
+  const [cmp] = editor.addComponents({ ...content, attributes: { ...(content.attributes as object), action } });
   const holder = document.createElement('div');
   holder.innerHTML = cmp!.toHTML();
   document.body.append(holder);
   const form = holder.querySelector('form')!;
-  const script = cmp!.get('script') as (this: HTMLFormElement, p: unknown) => void;
-  script.call(form, { encoding: 'json', successMessage: 'Sent!', errorMessage: 'Nope.', redirectUrl: '', ...props });
+  const attrs: Record<string, string> = { encoding: 'json', 'success-message': 'Sent!', 'error-message': 'Nope.', 'redirect-url': '' };
+  for (const [k, v] of Object.entries({ ...attrs, ...props })) form.setAttribute(`data-${k}`, v);
+  runScript(formDef, form);
   const fill = (values: Record<string, string>) =>
     Object.entries(values).forEach(([name, v]) => ((form.querySelector(`[name="${name}"]`) as HTMLInputElement).value = v));
   const submit = () => form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
@@ -53,8 +55,8 @@ describe('form blocks', () => {
 
   it('exposes endpoint, encoding and messages as traits', () => {
     const { cmp } = mount('form-block', '/x');
-    expect(cmp.getTraits().map((t) => t.get('name'))).toEqual(['action', 'encoding', 'successMessage', 'errorMessage', 'redirectUrl']);
-    expect(cmp.get('script-props')).toEqual(['encoding', 'successMessage', 'errorMessage', 'redirectUrl']);
+    expect(cmp.getTraits().map((t) => t.get('label'))).toEqual(['Endpoint URL', 'Send as', 'Success message', 'Error message', 'Redirect after success']);
+    expect(formDef.get(cmp, 'encoding')).toBe('json');
   });
 
   it('is recognised again when saved HTML is loaded', () => {

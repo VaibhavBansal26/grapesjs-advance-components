@@ -233,7 +233,7 @@ export function defineComponent<const T extends TraitMap = {}, C extends Record<
     installBlock(editor, overrides: BlockOverrides = {}) {
       if (spec.block === false) return;
       const b = spec.block ?? {};
-      const blockId = b.id ?? `${spec.id}-block`;
+      const blockId = overrides.id ?? b.id ?? `${spec.id}-block`;
       if (editor.Blocks.get(blockId)) return;
       const content: Record<string, unknown> = { type: spec.id };
       if (overrides.content !== undefined) content.components = overrides.content;

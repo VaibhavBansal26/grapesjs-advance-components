@@ -1,7 +1,7 @@
 import type { BlockProperties, Editor } from 'grapesjs';
 import type { ComponentOption } from './types';
-import { FORM_TYPE } from './forms';
-import { CHECKOUT_TYPE, checkoutButton, hero, progressBar, quote } from './builtin';
+import { checkoutButton, form, hero, progressBar, quote } from './builtin';
+import { blog, logos, pricing, pricingInner, team, testimonials } from './sections';
 import { escapeHtml, nextId } from './utils';
 import { ICONS, blockLabel } from './ui';
 
@@ -10,32 +10,6 @@ const INPUT_TYPES = [
   'password', 'radio', 'range', 'reset', 'search', 'submit', 'tel', 'text', 'time', 'url', 'week', 'checkbox',
 ];
 const HEADING_TAGS = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
-
-const checkoutValues = (ce: NonNullable<ComponentOption['checkoutElement']>) => ({
-  mode: ce.mode ?? 'link',
-  url: ce.url ?? '',
-  endpoint: ce.endpoint ?? '',
-  priceId: ce.priceId ?? '',
-  quantity: ce.quantity ?? 1,
-});
-
-/** A checkout button for use inside other blocks. Its settings are the same `data-*` attributes the trait panel edits. */
-function checkoutComponent(ce: NonNullable<ComponentOption['checkoutElement']>, fallbackText: string) {
-  const v = checkoutValues(ce);
-  return {
-    type: CHECKOUT_TYPE,
-    attributes: {
-      type: 'button',
-      class: 'aac-button aac-checkout',
-      'data-mode': v.mode,
-      'data-url': v.url,
-      'data-endpoint': v.endpoint,
-      'data-price-id': v.priceId,
-      'data-quantity': String(v.quantity),
-    },
-    components: escapeHtml(ce.buttonText ?? fallbackText),
-  };
-}
 
 type Entry = [id: string, props: BlockProperties];
 
@@ -46,15 +20,36 @@ function field(label: string, control: (id: string) => string, inline = false) {
   }</div>`;
 }
 
-function formContent(fa: NonNullable<ComponentOption['formAction']>, html: string) {
+const HONEYPOT = `<div class="aac-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>`;
+
+/** The fields inside the contact form, which is the `aac-form` definition from builtin.ts. */
+function contactFields(fa: NonNullable<ComponentOption['formAction']>) {
+  return (
+    field('Name', (id) => `<input id="${id}" type="text" name="name" autocomplete="name" required>`) +
+    field('Email', (id) => `<input id="${id}" type="email" name="email" autocomplete="email" required>`) +
+    field('Message', (id) => `<textarea id="${id}" name="message" required></textarea>`) +
+    HONEYPOT +
+    `<button type="submit" class="aac-button">${escapeHtml(fa.buttonText ?? 'Send message')}</button><p class="aac-form-status" role="status" aria-live="polite"></p>`
+  );
+}
+
+function newsletterFields(fa: NonNullable<ComponentOption['formAction']>) {
+  return (
+    `<div class="aac-form-row">` +
+    field('Email address', (id) => `<input id="${id}" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>`) +
+    `<button type="submit" class="aac-button">${escapeHtml(fa.buttonText ?? 'Subscribe')}</button></div>` +
+    HONEYPOT +
+    `<p class="aac-form-status" role="status" aria-live="polite"></p>`
+  );
+}
+
+function formValues(fa: NonNullable<ComponentOption['formAction']>) {
   return {
-    type: FORM_TYPE,
-    attributes: { class: 'aac-form', method: 'post', action: fa.endpoint ?? '' },
+    action: fa.endpoint ?? '',
     encoding: fa.encoding ?? 'json',
+    redirectUrl: fa.redirectUrl ?? '',
     ...(fa.successMessage ? { successMessage: fa.successMessage } : {}),
     ...(fa.errorMessage ? { errorMessage: fa.errorMessage } : {}),
-    redirectUrl: fa.redirectUrl ?? '',
-    components: html,
   };
 }
 
@@ -140,30 +135,6 @@ function buildEntries(c: ComponentOption): Entry[] {
 </div>`),
       ];
 
-    case 'form': {
-      const fa = c.formAction ?? {};
-      const hp = `<div class="aac-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>`;
-      const html =
-        field('Name', (id) => `<input id="${id}" type="text" name="name" autocomplete="name" required>`) +
-        field('Email', (id) => `<input id="${id}" type="email" name="email" autocomplete="email" required>`) +
-        field('Message', (id) => `<textarea id="${id}" name="message" required></textarea>`) +
-        hp +
-        `<button type="submit" class="aac-button">${escapeHtml(fa.buttonText ?? 'Send message')}</button><p class="aac-form-status" role="status" aria-live="polite"></p>`;
-      return [mk('form-block', ICONS.mail, formContent(fa, html))];
-    }
-
-    case 'newsletter': {
-      const fa = c.formAction ?? {};
-      const hp = `<div class="aac-hp" aria-hidden="true"><label>Leave this empty<input type="text" name="_gotcha" tabindex="-1" autocomplete="off"></label></div>`;
-      const html =
-        `<div class="aac-form-row">` +
-        field('Email address', (id) => `<input id="${id}" type="email" name="email" autocomplete="email" placeholder="you@example.com" required>`) +
-        `<button type="submit" class="aac-button">${escapeHtml(fa.buttonText ?? 'Subscribe')}</button></div>` +
-        hp +
-        `<p class="aac-form-status" role="status" aria-live="polite"></p>`;
-      return [mk('newsletter-block', ICONS.mail, formContent({ successMessage: 'You are subscribed. Thank you!', ...fa }, html))];
-    }
-
     case 'features':
       return [
         mk('features-block', ICONS.grid, `<section class="aac-features">${['Fast to start', 'Easy to change', 'Built to last']
@@ -175,25 +146,6 @@ function buildEntries(c: ComponentOption): Entry[] {
       return [
         mk('cta-block', ICONS.hero, `<section class="aac-cta"><h2>Ready to get started?</h2><p>Tell people what happens next.</p><a class="aac-button" href="#">Get in touch</a></section>`),
       ];
-
-    case 'pricing': {
-      const ce = c.checkoutElement ?? {};
-      return [
-        mk('pricing-block', ICONS.card, {
-          tagName: 'section',
-          attributes: { class: 'aac-pricing' },
-          components: [
-            { type: 'text', tagName: 'h3', content: 'Pro' },
-            { type: 'text', tagName: 'p', attributes: { class: 'aac-pricing-price' }, content: '$19<small>/month</small>' },
-            {
-              tagName: 'ul',
-              components: ['Unlimited projects', 'Priority support', 'Cancel anytime'].map((t) => ({ type: 'text', tagName: 'li', content: t })),
-            },
-            checkoutComponent(ce, 'Get started'),
-          ],
-        }),
-      ];
-    }
 
     case 'header':
       return [
@@ -251,9 +203,27 @@ export function loadBlocks(editor: Editor, components: ComponentOption[]) {
         return quote.installBlock(editor, as);
       case 'hero':
         return hero.installBlock(editor, as);
+      case 'testimonials':
+        return testimonials.installBlock(editor, as);
+      case 'logos':
+        return logos.installBlock(editor, as);
+      case 'team':
+        return team.installBlock(editor, as);
+      case 'blog':
+        return blog.installBlock(editor, as);
+      case 'pricing':
+        return pricing.installBlock(editor, { ...as, content: pricingInner(c.checkoutElement ?? {}) });
+      case 'form': {
+        const fa = c.formAction ?? {};
+        return form.installBlock(editor, { ...as, id: 'form-block', values: formValues(fa), content: contactFields(fa) });
+      }
+      case 'newsletter': {
+        const fa = { successMessage: 'You are subscribed. Thank you!', ...c.formAction };
+        return form.installBlock(editor, { ...as, id: 'newsletter-block', values: formValues(fa), content: newsletterFields(fa) });
+      }
       case 'checkout': {
         const ce = c.checkoutElement ?? {};
-        return checkoutButton().installBlock(editor, { ...as, values: checkoutValues(ce), content: escapeHtml(ce.buttonText ?? 'Buy now') });
+        return checkoutButton().installBlock(editor, { ...as, values: { mode: ce.mode ?? 'link', url: ce.url ?? '', endpoint: ce.endpoint ?? '', priceId: ce.priceId ?? '', quantity: ce.quantity ?? 1 }, content: escapeHtml(ce.buttonText ?? 'Buy now') });
       }
     }
     buildEntries(c).forEach(([id, props]) => {

@@ -4,7 +4,7 @@ A monorepo with two npm packages that work together.
 
 | Package | What it is | Install |
 |---|---|---|
-| [`grapesjs-advance-components`](packages/grapesjs-advance-components) | GrapesJS plugin: 32 accessible blocks, forms that submit, Stripe checkout, multi-page export, bring-your-own-model AI | `npm i grapesjs grapesjs-advance-components` |
+| [`grapesjs-advance-components`](packages/grapesjs-advance-components) | GrapesJS plugin: 36 accessible blocks, forms that submit, Stripe checkout, multi-page export, bring-your-own-model AI | `npm i grapesjs grapesjs-advance-components` |
 | [`promptsite`](packages/promptsite) | CLI: generate a multi-page site from one sentence, edit it visually, audit it for leaks, serve an API for n8n | `npx promptsite generate "Family bakery in Leeds"` |
 
 📖 **[Documentation](https://vaibhavbansal26.github.io/grapesjs-advance-components/)** · 🧪 **[Playground](https://vaibhavbansal26.github.io/grapesjs-advance-components/playground.html)** · 🎨 **[Block showcase](https://vaibhavbansal26.github.io/grapesjs-advance-components/showcase.html)**

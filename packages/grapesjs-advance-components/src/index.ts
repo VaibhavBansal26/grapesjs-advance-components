@@ -2,8 +2,8 @@ import type { Editor } from 'grapesjs';
 import { loadAi } from './ai';
 import { loadBlocks } from './blocks';
 import { loadComponents } from './components';
+import { addMissingRules } from './css-sync';
 import { mergeComponents } from './defaults';
-import { loadForms } from './forms';
 import { loadPages } from './pages';
 import { loadPayments } from './payments';
 import { en } from './i18n';
@@ -30,12 +30,15 @@ export default function plugin(editor: Editor, opts: PluginOptions = {}) {
 
   loadComponents(editor);
   loadPayments(editor, opts.payments);
-  loadForms(editor);
   loadBlocks(editor, components);
 
   editor.I18n.addMessages({ en, ...opts.i18n });
 
-  if (opts.injectStyles !== false) editor.Css.addRules(baseCss);
+  if (opts.injectStyles !== false) {
+    editor.Css.addRules(baseCss);
+    // A saved project replaces the stylesheet when it loads; fill in rules it was saved without.
+    editor.on('load', () => addMissingRules(editor, baseCss));
+  }
   opts.custom?.forEach((definition) => definition.install(editor));
   if (opts.ai) loadAi(editor, opts.ai);
   if (opts.pages !== false) loadPages(editor, typeof opts.pages === 'object' ? opts.pages : {});

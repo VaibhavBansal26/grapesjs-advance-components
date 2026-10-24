@@ -26,7 +26,11 @@ export type ComponentKind =
   | 'newsletter'
   | 'hero'
   | 'features'
-  | 'cta';
+  | 'cta'
+  | 'testimonials'
+  | 'logos'
+  | 'team'
+  | 'blog';
 
 export interface FormElementOptions {
   type?: string;

@@ -76,6 +76,7 @@ export const baseCss = `
 .aac-pricing{${base};width:100%;max-width:340px;margin:24px auto;padding:32px 28px;${box(border)};${rLg};background-color:${surface};box-shadow:var(--aac-shadow,0 1px 2px rgba(0,0,0,.05),0 8px 24px rgba(0,0,0,.06));text-align:center}
 .aac-pricing h3{margin:0;font-size:1.05rem;letter-spacing:.02em;color:${muted}}
 .aac-pricing-price{margin:10px 0 20px;font-size:2.75rem;line-height:1;font-weight:700}
+.aac-pricing-amount{letter-spacing:-.02em}
 .aac-pricing-price small{font-size:1rem;font-weight:500;color:${muted}}
 .aac-pricing ul{margin:0 0 24px;padding:0;list-style:none;text-align:left}
 .aac-pricing li{display:flex;gap:10px;align-items:baseline;padding:7px 0}
@@ -129,6 +130,39 @@ export const baseCss = `
 .aac-prose{max-width:68ch;margin:40px auto;line-height:1.7}
 .aac-pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;align-items:stretch;justify-items:center;margin:24px 0}
 .aac-pricing-grid .aac-pricing{margin:0}
+.aac-cols-1{grid-template-columns:minmax(0,1fr)}
+.aac-cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.aac-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+
+.aac-testimonials{${base};display:grid;gap:20px;margin:24px 0}
+.aac-testimonial{margin:0;padding:24px;${box(border)};${rLg};background-color:${surface}}
+.aac-testimonial blockquote{margin:0 0 16px;line-height:1.6}
+.aac-testimonial figcaption{display:flex;flex-direction:column;gap:2px}
+.aac-testimonial strong{font-weight:600}
+.aac-testimonial figcaption span{font-size:.875rem;color:${muted}}
+
+.aac-logos{${base};margin:32px 0;text-align:center}
+.aac-logos-title{margin:0 0 16px;font-size:.875rem;letter-spacing:.06em;text-transform:uppercase;color:${muted}}
+.aac-logos-list{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 40px;margin:0;padding:0;list-style:none}
+.aac-logos-list li{font-size:1.35rem;font-weight:700;letter-spacing:-.01em}
+.aac-logos--muted .aac-logos-list li{opacity:.55}
+
+.aac-team{${base};display:grid;gap:20px;margin:24px 0}
+.aac-member{padding:24px;${box(border)};${rLg};background-color:${surface};text-align:center}
+.aac-avatar{display:flex;align-items:center;justify-content:center;width:72px;height:72px;margin:0 auto 14px;border-radius:50%;background-color:${soft};${box(border)};font-weight:700;font-size:1.25rem;color:${accent}}
+.aac-member h3{margin:0 0 4px;font-size:1.05rem}
+.aac-member p{margin:0;color:${muted}}
+
+.aac-blog{${base};display:grid;gap:20px;margin:24px 0}
+.aac-blog--list{grid-template-columns:minmax(0,1fr)}
+.aac-blog--grid{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.aac-post{padding:22px 24px;${box(border)};${rLg};background-color:${surface}}
+.aac-post-meta{margin:0 0 6px;font-size:.8rem;letter-spacing:.04em;text-transform:uppercase;color:${muted}}
+.aac-post h3{margin:0 0 8px;font-size:1.2rem;line-height:1.3}
+.aac-post h3 a{color:inherit;text-decoration:none}
+.aac-post h3 a:hover{color:${accent}}
+.aac-post-excerpt{margin:0;color:${muted};line-height:1.6}
+
 .aac-site{min-height:100vh}
 .aac-page{max-width:1040px;margin:0 auto;padding:0 24px 64px}
 
@@ -141,6 +175,7 @@ export const baseCss = `
 .aac-slide{padding:36px 22px}
 .aac-slide-quote{font-size:1.15rem}
 .aac-pricing{max-width:none}
+.aac-cols-2,.aac-cols-3{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:reduce){
 .aac-faq summary::after,.aac-progress-inner,.aac-button,.aac-field input,.aac-field select,.aac-field textarea{transition:none}

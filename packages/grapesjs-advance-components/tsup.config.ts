@@ -3,7 +3,7 @@ import { defineConfig } from 'tsup';
 // `npm run build` empties dist first; the configs below run in parallel, so none of them cleans.
 export default defineConfig([
   {
-    entry: ['src/index.ts', 'src/testing.ts'],
+    entry: ['src/index.ts', 'src/testing.ts', 'src/editor.ts'],
     format: ['esm', 'cjs'],
     dts: true,
     sourcemap: true,

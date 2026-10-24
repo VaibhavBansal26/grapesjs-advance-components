@@ -13,6 +13,8 @@ export interface SiteCopy {
   faq: Array<{ question: string; answer: string }>;
   pricing: Array<{ name: string; price: string; period: string; features: string[]; cta: string }>;
   about: string;
+  team: Array<{ name: string; role: string }>;
+  posts: Array<{ title: string; excerpt: string }>;
   contact: { heading: string; text: string; buttonText: string };
 }
 
@@ -27,6 +29,8 @@ const PIECES: Record<CopyKey, string> = {
   faq: '"faq": [{ "question": string, "answer": string }]  // 3 to 6 items',
   pricing: '"pricing": [{ "name": string, "price": string, "period": string, "features": string[], "cta": string }]  // 1 to 3 plans; price like "$19", period like "/month" or "one-time"',
   about: '"about": string  // one paragraph, 2-4 sentences',
+  team: '"team": [{ "name": string, "role": string }]  // 2 to 4 placeholder people; use invented names, never real ones',
+  posts: '"posts": [{ "title": string, "excerpt": string }]  // 3 plausible blog post ideas for this business, excerpt 1-2 sentences',
   contact: '"contact": { "heading": string, "text": string, "buttonText": string }',
 };
 
@@ -54,7 +58,7 @@ export function extractJson(raw: string): unknown {
   return JSON.parse(body.slice(start, end + 1));
 }
 
-const MIN: Partial<Record<CopyKey, number>> = { features: 3, faq: 3, pricing: 1 };
+const MIN: Partial<Record<CopyKey, number>> = { features: 3, faq: 3, pricing: 1, team: 1, posts: 1 };
 
 /** Coerce a model reply into `SiteCopy`, throwing a message the model can act on if something required is missing. */
 export function parseCopy(raw: unknown, needs: CopyKey[]): SiteCopy {
@@ -78,6 +82,8 @@ export function parseCopy(raw: unknown, needs: CopyKey[]): SiteCopy {
       }))
       .filter((p) => p.name && p.price),
     about: text(r.about, 900),
+    team: list(r.team, 4).map((m) => ({ name: text(obj(m).name, 50), role: text(obj(m).role, 60) })).filter((m) => m.name && m.role),
+    posts: list(r.posts, 4).map((p) => ({ title: text(obj(p).title, 90), excerpt: text(obj(p).excerpt, 220) })).filter((p) => p.title && p.excerpt),
     contact: { heading: text(contact.heading, 80), text: text(contact.text, 300), buttonText: text(contact.buttonText, 30) },
   };
 
@@ -123,6 +129,16 @@ export function sampleCopy(brief: string, name?: string): SiteCopy {
     pricing: [
       { name: 'Starter', price: '$9', period: '/month', features: ['The basics', 'Email support'], cta: 'Choose Starter' },
       { name: 'Pro', price: '$29', period: '/month', features: ['Everything in Starter', 'Priority support', 'Extra features'], cta: 'Choose Pro' },
+    ],
+    team: [
+      { name: 'Alex Morgan', role: 'Founder' },
+      { name: 'Sam Carter', role: 'Customer care' },
+      { name: 'Jo Bennett', role: 'Operations' },
+    ],
+    posts: [
+      { title: 'How we do things differently', excerpt: 'A placeholder post about what makes this business different.' },
+      { title: 'Three questions we hear every week', excerpt: 'A placeholder post that answers common questions.' },
+      { title: 'What is new this season', excerpt: 'A placeholder post about recent news and updates.' },
     ],
     about: `${title} exists to help people with ${first.toLowerCase()}. Tell your story here in two or three sentences.`,
     contact: { heading: 'Get in touch', text: 'Send a message and we will reply soon.', buttonText: 'Send message' },

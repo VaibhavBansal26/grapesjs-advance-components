@@ -102,6 +102,8 @@ export interface ComponentSpec<T extends TraitMap = TraitMap, C extends Record<s
 }
 
 export interface BlockOverrides {
+  /** Block id, for a second block made from the same definition. Default: the definition's own block id. */
+  id?: string;
   label?: string;
   category?: string;
   /** HTML placed inside the dropped component's root, instead of the default children. */
