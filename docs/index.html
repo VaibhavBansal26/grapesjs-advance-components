@@ -4,7 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>grapesjs-advance-components docs</title>
-<meta name="description" content="Accessible GrapesJS blocks, Stripe checkout, multi-page export and AI block generation.">
+<meta name="description" content="One sentence to an audited, ready-to-deploy website: the promptsite CLI, plus 41 accessible GrapesJS blocks you can embed in your own app.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="promptsite and grapesjs-advance-components">
+<meta property="og:description" content="A CLI that writes, edits, audits and deploys multi-page sites, and 41 accessible GrapesJS blocks.">
+<meta property="og:url" content="https://vaibhavbansal26.github.io/grapesjs-advance-components/">
+<meta property="og:image" content="https://vaibhavbansal26.github.io/grapesjs-advance-components/assets/social-preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://vaibhavbansal26.github.io/grapesjs-advance-components/assets/social-preview.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,6 +33,7 @@
 <aside class="side" aria-label="Documentation sections">
   <div class="group">Start</div>
   <a href="#packages">Two packages</a>
+  <a href="#trust">Can I rely on it?</a>
   <a href="#generate">Generate from a prompt</a>
   <a href="#usecases">What can you build?</a>
   <a href="#install">Install</a>
@@ -56,14 +64,14 @@
 
 <main>
 <h1>grapesjs-advance-components</h1>
-<p class="lead">Accessible, themeable GrapesJS blocks, plus Stripe checkout, multi-page export and AI block generation that works with any model provider.</p>
+<p class="lead">One sentence to an audited, ready-to-deploy website: the <code>promptsite</code> command line tool writes it, you polish it visually, and it is checked for leaked secrets before it ships. The same blocks are a GrapesJS plugin you can embed in your own app.</p>
 <div class="cta">
   <a class="btn" href="playground.html">Open the playground</a>
   <a class="btn alt" href="#quickstart">Quick start</a>
 </div>
 
 <div class="cards">
-  <div class="card"><h3>36 blocks</h3><p>Hero, FAQ, pricing, testimonials, team, blog list, forms, slider, header, footer and more, with no runtime dependencies.</p></div>
+  <div class="card"><h3>41 blocks</h3><p>Hero, FAQ, pricing, testimonials, team, stats, tabs, forms, slider, header, footer and more, with no runtime dependencies.</p></div>
   <div class="card"><h3>AI, your provider</h3><p>You supply the model call. No key in the package, output sanitized.</p></div>
   <div class="card"><h3>Stripe checkout</h3><p>Hosted-page redirects only. Card data never touches your page.</p></div>
   <div class="card"><h3>Prompt to site</h3><p>One command drafts a multi-page site with AI. Polish it visually, export plain files.</p></div>
@@ -78,10 +86,30 @@
 <p>The project ships as two npm packages that work together. Pick by what you want to do:</p>
 <table>
 <tr><th>Package</th><th>Use it to</th><th>Start</th></tr>
-<tr><td><a href="https://www.npmjs.com/package/grapesjs-advance-components"><code>grapesjs-advance-components</code></a></td><td>Embed an editor with 36 accessible blocks, forms that submit, Stripe checkout, page export and bring-your-own-model AI in <em>your own app</em>. Browser only.</td><td><code>npm i grapesjs grapesjs-advance-components</code></td></tr>
+<tr><td><a href="https://www.npmjs.com/package/grapesjs-advance-components"><code>grapesjs-advance-components</code></a></td><td>Embed an editor with 41 accessible blocks, forms that submit, Stripe checkout, page export and bring-your-own-model AI in <em>your own app</em>. Browser only.</td><td><code>npm i grapesjs grapesjs-advance-components</code></td></tr>
 <tr><td><a href="https://www.npmjs.com/package/promptsite"><code>promptsite</code></a></td><td>Generate a finished multi-page site from one sentence, edit it visually, audit it for leaks, or run an HTTP API for n8n and CI. Node only.</td><td><code>npx promptsite generate "&hellip;"</code></td></tr>
 </table>
 <p><code>promptsite</code> is built on the plugin. The plugin never depends on it, so if you only embed the editor you carry no CLI or server code.</p>
+
+<h2 id="trust">Can I rely on it?</h2>
+<p>It is a small, single-maintainer project, so here is what is checked instead of asking you to trust it.</p>
+<ul>
+  <li><strong>Tested across versions.</strong> Every change runs the plugin tests on Node 18, 20 and 22 against GrapesJS 0.21, 0.22 and the latest release, and the CLI tests on Node 18, 20 and 22.</li>
+  <li><strong>Releases are traceable.</strong> Both packages are published from GitHub Actions with npm provenance and no long-lived npm token.</li>
+  <li><strong>Leaks are blocked, not just reported.</strong> <code>promptsite audit</code>, and <code>promptsite deploy</code> which runs it first, fail on committed API keys and unsafe markup. Credentials come from the environment and are never accepted as flags.</li>
+  <li><strong>No runtime dependencies</strong> in the plugin; <code>grapesjs</code> is a peer dependency, so you never get a second copy of it.</li>
+  <li><strong>Honest limits.</strong> Generated copy is a draft, and <code>promptsite deploy</code> is tested with a fake runner but not yet against a live Cloudflare or Netlify account. The docs say so where it applies.</li>
+</ul>
+<h3>How it fits with other GrapesJS plugins</h3>
+<p>It is meant to sit beside them, not replace them.</p>
+<table>
+<tr><th>You need</th><th>Use</th></tr>
+<tr><td>Layout columns, basic text, link, image, video</td><td><a href="https://www.npmjs.com/package/grapesjs-blocks-basic"><code>grapesjs-blocks-basic</code></a></td></tr>
+<tr><td>A full editor UI preset</td><td><a href="https://www.npmjs.com/package/grapesjs-preset-webpage"><code>grapesjs-preset-webpage</code></a></td></tr>
+<tr><td>Paste raw HTML or script into a block</td><td><a href="https://www.npmjs.com/package/grapesjs-custom-code"><code>grapesjs-custom-code</code></a></td></tr>
+<tr><td>Finished marketing sections, forms that post to your endpoint, Stripe checkout, tabs, and a way to build your own tested blocks</td><td><strong>this plugin</strong></td></tr>
+<tr><td>A whole site from a prompt, audited and deployable</td><td><strong><code>promptsite</code></strong></td></tr>
+</table>
 
 <h2 id="generate">Generate a whole site from a prompt</h2>
 <p>The <a href="https://www.npmjs.com/package/promptsite"><code>promptsite</code></a> command line tool writes a multi-page site from one sentence, lets a person polish it in the visual editor, and exports plain static files you can host anywhere. There is nothing to install first: <code>npx</code> fetches it (Node 18 or newer).</p>
@@ -375,6 +403,11 @@ node examples/render-site.mjs project.json ./out      # writes index.html, prici
 <tr><td>Logo wall</td><td><code>logos-block</code></td><td><code>logos</code></td></tr>
 <tr><td>Team</td><td><code>team-block</code></td><td><code>team</code></td></tr>
 <tr><td>Blog list</td><td><code>blog-block</code></td><td><code>blog</code></td></tr>
+<tr><td>Stats</td><td><code>stats-block</code></td><td><code>stats</code></td></tr>
+<tr><td>Steps</td><td><code>steps-block</code></td><td><code>steps</code></td></tr>
+<tr><td>Banner</td><td><code>banner-block</code></td><td><code>banner</code></td></tr>
+<tr><td>Comparison table</td><td><code>compare-block</code></td><td><code>compare</code></td></tr>
+<tr><td>Tabs</td><td><code>tabs-block</code></td><td><code>tabs</code></td></tr>
 </table>
 <p>Blocks use inline SVG icons, so no icon font is needed. Form fields get unique ids and matching <code>label for</code>; option values and placeholders are escaped.</p>
 
@@ -387,6 +420,11 @@ node examples/render-site.mjs project.json ./out      # writes index.html, prici
 <tr><td>Team</td><td>Columns (1, 2 or 3)</td><td>People: initials, name, role</td></tr>
 <tr><td>Blog list</td><td>Layout (list or grid)</td><td>Posts: date line, title, excerpt</td></tr>
 <tr><td>Pricing</td><td>Price, period; the button is a <a href="#payments">checkout button</a></td><td>Feature lines</td></tr>
+<tr><td>Stats</td><td>Columns (2, 3 or 4)</td><td>Value and label pairs</td></tr>
+<tr><td>Steps</td><td>Layout (vertical or horizontal); numbered by CSS</td><td>Steps</td></tr>
+<tr><td>Banner</td><td>Tone (info, success or warning)</td><td>One editable line, announced as a note</td></tr>
+<tr><td>Comparison table</td><td>Striped rows</td><td>Table rows; real header cells with <code>scope</code></td></tr>
+<tr><td>Tabs</td><td>none; three fixed tabs</td><td>Without JavaScript every panel is shown, so nothing is hidden. With it: tab roles, arrow keys, Home and End.</td></tr>
 </table>
 <p>The columns collapse to one on narrow screens. The blog list shows a date line you fill in yourself, because the templates never invent facts. The <code>checkoutElement</code> option still sets the pricing button's mode, URL and text.</p>
 

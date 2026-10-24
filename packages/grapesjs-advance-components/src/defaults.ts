@@ -25,6 +25,11 @@ export const defaultComponents: ComponentOption[] = [
   { label: 'Logo wall', name: 'logos', category: 'Social proof', componentType: 'logos' },
   { label: 'Team', name: 'team', category: 'Sections', componentType: 'team' },
   { label: 'Blog list', name: 'blog', category: 'Content', componentType: 'blog' },
+  { label: 'Stats', name: 'stats', category: 'Social proof', componentType: 'stats' },
+  { label: 'Steps', name: 'steps', category: 'Sections', componentType: 'steps' },
+  { label: 'Banner', name: 'banner', category: 'Sections', componentType: 'banner' },
+  { label: 'Comparison table', name: 'compare', category: 'Commerce', componentType: 'compare' },
+  { label: 'Tabs', name: 'tabs', category: 'Sections', componentType: 'tabs' },
   { label: 'Image', name: 'image', category: 'Media', componentType: 'image' },
   { label: 'Video', name: 'video', category: 'Media', componentType: 'video' },
   {

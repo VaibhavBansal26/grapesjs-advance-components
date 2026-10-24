@@ -1,7 +1,7 @@
 import type { BlockProperties, Editor } from 'grapesjs';
 import type { ComponentOption } from './types';
 import { checkoutButton, form, hero, progressBar, quote } from './builtin';
-import { blog, logos, pricing, pricingInner, team, testimonials } from './sections';
+import { banner, blog, compare, logos, pricing, pricingInner, stats, steps, tabs, team, testimonials } from './sections';
 import { escapeHtml, nextId } from './utils';
 import { ICONS, blockLabel } from './ui';
 
@@ -211,6 +211,16 @@ export function loadBlocks(editor: Editor, components: ComponentOption[]) {
         return team.installBlock(editor, as);
       case 'blog':
         return blog.installBlock(editor, as);
+      case 'stats':
+        return stats.installBlock(editor, as);
+      case 'steps':
+        return steps.installBlock(editor, as);
+      case 'banner':
+        return banner.installBlock(editor, as);
+      case 'compare':
+        return compare.installBlock(editor, as);
+      case 'tabs':
+        return tabs.installBlock(editor, as);
       case 'pricing':
         return pricing.installBlock(editor, { ...as, content: pricingInner(c.checkoutElement ?? {}) });
       case 'form': {
