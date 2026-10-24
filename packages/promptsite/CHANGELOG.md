@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.2.0](https://github.com/VaibhavBansal26/grapesjs-advance-components/compare/promptsite-v0.1.0...promptsite-v0.2.0) (2026-10-24)
+
+
+### Features
+
+* add section blocks, createEditor and a five-page small-business template ([5b6618c](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/5b6618ce60fbc174a58f7f15fb781e10656df3e3))
+* section blocks, createEditor and a five-page small-business template ([01896d3](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/01896d36cccbeaad30a86184575043cd9fb3e626))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * grapesjs-advance-components bumped from ^2.0.0 to ^2.3.0
+
 ## 0.1.0 (2026-10-23)
 
 

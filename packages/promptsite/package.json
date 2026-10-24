@@ -1,6 +1,6 @@
 {
   "name": "promptsite",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Generate a multi-page website from one sentence with your own model, polish it in a visual editor, audit it for leaks, and export plain static files.",
   "type": "module",
   "bin": {
@@ -39,7 +39,7 @@
   "license": "MIT",
   "dependencies": {
     "grapesjs": "^0.23.8",
-    "grapesjs-advance-components": "^2.0.0",
+    "grapesjs-advance-components": "^2.3.0",
     "jsdom": "^25.0.0"
   },
   "engines": {
