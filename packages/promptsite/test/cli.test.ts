@@ -64,6 +64,29 @@ describe('generateSite', () => {
     expect(site.files['contact.js']).toContain('aac:form-submit');
   });
 
+  it('builds the five-page small-business site with the section blocks', async () => {
+    const site = await gen({ template: 'small-business', name: 'Wick Bakery', paymentLink: 'https://buy.stripe.com/test_abc', formEndpoint: '/api/contact' });
+    expect(site.pages).toEqual(['Home', 'Services', 'About', 'Journal', 'Contact']);
+    for (const f of ['index', 'services', 'about', 'journal', 'contact']) expect(site.files[`${f}.html`], f).toBeDefined();
+    expect(site.files['index.html']).toContain('aac-testimonials');
+    expect(site.files['services.html']).toContain('aac-pricing');
+    expect(site.files['services.html']).toContain('data-url="https://buy.stripe.com/test_abc"');
+    expect(site.files['about.html']).toContain('aac-team');
+    expect(site.files['about.html']).toContain('aac-avatar');
+    expect(site.files['journal.html']).toContain('aac-blog');
+    expect(site.files['contact.html']).toContain('name="_gotcha"');
+    // every page links to every other page, and no page: link is left unresolved
+    for (const html of Object.values(site.files)) expect(html).not.toContain('page:');
+    expect(site.files['index.html']).toContain('href="journal.html"');
+  });
+
+  it('keeps the small-business site editable: re-exporting the saved project gives the same pages', async () => {
+    const site = await gen({ template: 'small-business', formEndpoint: '/api/contact' });
+    const again = await exportProject(site.project, { formEndpoint: '/api/contact' });
+    expect(Object.keys(again).sort()).toEqual(Object.keys(site.files).sort());
+    expect(again['about.html']).toContain('aac-team');
+  });
+
   it('uses checkout buttons when a payment link is given, contact links otherwise', async () => {
     const withLink = await gen({ paymentLink: 'https://buy.stripe.com/test_abc' });
     expect(withLink.files['pricing.html']).toContain('aac-checkout');

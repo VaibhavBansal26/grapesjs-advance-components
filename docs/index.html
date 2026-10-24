@@ -34,6 +34,7 @@
   <a href="#options">Options</a>
   <div class="group">Blocks</div>
   <a href="#blocks">Block reference</a>
+  <a href="#sections">Section blocks</a>
   <a href="#theming">Theming</a>
   <a href="#progress">Progress bar</a>
   <div class="group">Features</div>
@@ -61,7 +62,7 @@
 </div>
 
 <div class="cards">
-  <div class="card"><h3>32 blocks</h3><p>Hero, FAQ, pricing, forms, slider, header, footer and more, with no runtime dependencies.</p></div>
+  <div class="card"><h3>36 blocks</h3><p>Hero, FAQ, pricing, testimonials, team, blog list, forms, slider, header, footer and more, with no runtime dependencies.</p></div>
   <div class="card"><h3>AI, your provider</h3><p>You supply the model call. No key in the package, output sanitized.</p></div>
   <div class="card"><h3>Stripe checkout</h3><p>Hosted-page redirects only. Card data never touches your page.</p></div>
   <div class="card"><h3>Prompt to site</h3><p>One command drafts a multi-page site with AI. Polish it visually, export plain files.</p></div>
@@ -73,7 +74,7 @@
 <p>The project ships as two npm packages that work together. Pick by what you want to do:</p>
 <table>
 <tr><th>Package</th><th>Use it to</th><th>Start</th></tr>
-<tr><td><a href="https://www.npmjs.com/package/grapesjs-advance-components"><code>grapesjs-advance-components</code></a></td><td>Embed an editor with 32 accessible blocks, forms that submit, Stripe checkout, page export and bring-your-own-model AI in <em>your own app</em>. Browser only.</td><td><code>npm i grapesjs grapesjs-advance-components</code></td></tr>
+<tr><td><a href="https://www.npmjs.com/package/grapesjs-advance-components"><code>grapesjs-advance-components</code></a></td><td>Embed an editor with 36 accessible blocks, forms that submit, Stripe checkout, page export and bring-your-own-model AI in <em>your own app</em>. Browser only.</td><td><code>npm i grapesjs grapesjs-advance-components</code></td></tr>
 <tr><td><a href="https://www.npmjs.com/package/promptsite"><code>promptsite</code></a></td><td>Generate a finished multi-page site from one sentence, edit it visually, audit it for leaks, or run an HTTP API for n8n and CI. Node only.</td><td><code>npx promptsite generate "&hellip;"</code></td></tr>
 </table>
 <p><code>promptsite</code> is built on the plugin. The plugin never depends on it, so if you only embed the editor you carry no CLI or server code.</p>
@@ -98,6 +99,7 @@ npx promptsite edit ./bakery        # visual editor on http://127.0.0.1:4173 (au
 <tr><th>Template</th><th>Pages</th><th>For</th></tr>
 <tr><td><code>landing</code></td><td>Home, Pricing, Contact</td><td>SaaS or product: hero, benefits, testimonials, FAQ, plans</td></tr>
 <tr><td><code>local-business</code></td><td>Home, About, Contact</td><td>Shop, studio or service: hero, services, about, testimonials</td></tr>
+<tr><td><code>small-business</code></td><td>Home, Services, About, Journal, Contact</td><td>A full small-business site: testimonials, services with plans and FAQ, the team, a blog list</td></tr>
 <tr><td><code>shop</code></td><td>Home, Contact</td><td>Products or plans with Stripe buttons, FAQ and a newsletter signup</td></tr>
 </table>
 
@@ -112,7 +114,7 @@ npx promptsite edit ./bakery        # visual editor on http://127.0.0.1:4173 (au
 <h3>Options</h3>
 <table>
 <tr><th>Flag</th><th></th></tr>
-<tr><td><code>--template</code></td><td><code>landing</code> (default), <code>local-business</code> or <code>shop</code></td></tr>
+<tr><td><code>--template</code></td><td><code>landing</code> (default), <code>local-business</code>, <code>small-business</code> or <code>shop</code></td></tr>
 <tr><td><code>--name</code>, <code>--accent #hex</code>, <code>--theme light|dark</code></td><td>Business name, brand colour (hover and focus shades are derived), dark pages</td></tr>
 <tr><td><code>--payment-link</code></td><td>A Stripe Payment Link. Pricing buttons become checkout buttons; without it they lead to the contact page.</td></tr>
 <tr><td><code>--form-endpoint</code></td><td>Where the contact and newsletter forms post. Without it they show a "no valid endpoint" message.</td></tr>
@@ -191,6 +193,30 @@ grapesjs.init({
     },
   },
 });</code></pre>
+
+<h3>One call: <code>createEditor</code></h3>
+<p>If you would rather not write <code>grapesjs.init</code>, <code>createEditor</code> sets the plugin up and passes everything else straight to GrapesJS:</p>
+<pre><code>import 'grapesjs/dist/css/grapes.min.css';
+import { createEditor } from 'grapesjs-advance-components/editor';
+
+const editor = createEditor({
+  container: '#editor',                 // selector or element
+  plugin: { custom: [testimonial] },    // options for this plugin
+  projectData,                          // optional: a saved project
+  storageKey: 'my-site',                // autosaves in this browser
+  onReady: (editor) =&gt; {},
+});</code></pre>
+<table>
+<tr><th>Option</th><th>Default</th><th>Description</th></tr>
+<tr><td><code>container</code></td><td>required</td><td>Where to mount the editor.</td></tr>
+<tr><td><code>plugin</code></td><td><code>{}</code></td><td>This plugin's <a href="#options">options</a>.</td></tr>
+<tr><td><code>plugins</code></td><td><code>[]</code></td><td>Other GrapesJS plugins to load first.</td></tr>
+<tr><td><code>projectData</code></td><td>none</td><td>A project from <code>editor.getProjectData()</code>.</td></tr>
+<tr><td><code>storage</code></td><td><code>'local'</code></td><td><code>'local'</code> autosaves in <code>localStorage</code>; <code>false</code> turns storage off; or pass a GrapesJS <code>storageManager</code> for your own backend.</td></tr>
+<tr><td><code>storageKey</code></td><td><code>'aac-project'</code></td><td>The <code>localStorage</code> key for <code>storage: 'local'</code>.</td></tr>
+<tr><td><code>onReady</code></td><td>none</td><td>Called with the editor once GrapesJS has loaded.</td></tr>
+</table>
+<p>Every other option is a normal GrapesJS option (<code>height</code> defaults to <code>100vh</code>). It lives in its own entry, <code>grapesjs-advance-components/editor</code>, because it imports <code>grapesjs</code>; the main entry does not, so pages that load GrapesJS from a <code>&lt;script&gt;</code> tag are unaffected. It is not part of the browser (<code>&lt;script&gt;</code>) build.</p>
 
 <h2 id="integrate">Integration guides</h2>
 <p>The plugin only needs a GrapesJS <code>editor</code>, so it works in any framework. The rules are the same everywhere: create the editor in the browser only, and destroy it when the component goes away.</p>
@@ -341,8 +367,24 @@ node examples/render-site.mjs project.json ./out      # writes index.html, prici
 <tr><td>Contact form, Newsletter</td><td><code>form-block</code>, <code>newsletter-block</code></td><td><code>form</code>, <code>newsletter</code></td></tr>
 <tr><td>Checkout button</td><td><code>checkout-button-block</code></td><td><code>checkout</code></td></tr>
 <tr><td>Pricing card</td><td><code>pricing-block</code></td><td><code>pricing</code></td></tr>
+<tr><td>Testimonials</td><td><code>testimonials-block</code></td><td><code>testimonials</code></td></tr>
+<tr><td>Logo wall</td><td><code>logos-block</code></td><td><code>logos</code></td></tr>
+<tr><td>Team</td><td><code>team-block</code></td><td><code>team</code></td></tr>
+<tr><td>Blog list</td><td><code>blog-block</code></td><td><code>blog</code></td></tr>
 </table>
 <p>Blocks use inline SVG icons, so no icon font is needed. Form fields get unique ids and matching <code>label for</code>; option values and placeholders are escaped.</p>
+
+<h2 id="sections">Section blocks</h2>
+<p>Pricing, testimonials, the logo wall, team and blog list are made with <a href="#define">defineComponent</a>, the same API you use for your own. Their source is <code>src/sections.ts</code>, and it is a good starting point to copy. Each is one section whose list items you can <strong>add, copy, remove and reorder</strong> in the editor (<code>repeat</code>) while the rest of the section stays fixed (<code>locked</code>), and whose text is edited in place (<code>editable</code>). Settings live in the markup, so they survive export and re-import.</p>
+<table>
+<tr><th>Block</th><th>Settings</th><th>List items</th></tr>
+<tr><td>Testimonials</td><td>Columns (1, 2 or 3)</td><td>Quote cards</td></tr>
+<tr><td>Logo wall</td><td>Muted colours</td><td>Logos (text wordmarks; replace with images if you like)</td></tr>
+<tr><td>Team</td><td>Columns (1, 2 or 3)</td><td>People: initials, name, role</td></tr>
+<tr><td>Blog list</td><td>Layout (list or grid)</td><td>Posts: date line, title, excerpt</td></tr>
+<tr><td>Pricing</td><td>Price, period; the button is a <a href="#payments">checkout button</a></td><td>Feature lines</td></tr>
+</table>
+<p>The columns collapse to one on narrow screens. The blog list shows a date line you fill in yourself, because the templates never invent facts. The <code>checkoutElement</code> option still sets the pricing button's mode, URL and text.</p>
 
 <h2 id="theming">Theming</h2>
 <p>The blocks look finished with no setup, and every colour and the corner radius read a CSS custom property, so one line re-skins them. Try it live in the <a href="showcase.html">block showcase</a> (light, dark and a teal re-skin).</p>
@@ -443,6 +485,7 @@ payments: { allowedHosts: ['checkout.stripe.com', 'buy.stripe.com'] }   // defau
 <tr><td>Sending</td><td><code>fetch</code> POST of JSON (default) or form-encoded data (<code>encoding: 'form'</code>, which form services expect). File uploads are not supported.</td></tr>
 <tr><td>States</td><td>An <code>aria-live</code> status line shows sending, success and error. Values are kept when sending fails and cleared on success.</td></tr>
 <tr><td>Bots</td><td>A hidden honeypot field (<code>_gotcha</code>). If a bot fills it, the form looks successful and sends nothing. It is a first line of defence only.</td></tr>
+<tr><td>Where settings live</td><td>On the <code>&lt;form&gt;</code> as <code>action</code>, <code>data-encoding</code>, <code>data-success-message</code>, <code>data-error-message</code> and <code>data-redirect-url</code>, so exported and re-imported HTML keeps them.</td></tr>
 <tr><td>No JavaScript</td><td>The form still has <code>method="post"</code> and your <code>action</code>, so it falls back to a normal browser POST.</td></tr>
 <tr><td>Safety</td><td>Endpoints must be <code>https</code> (or <code>http</code> on localhost). An empty, <code>javascript:</code> or plain-<code>http</code> endpoint is refused with a visible message.</td></tr>
 </table>
@@ -582,6 +625,7 @@ grapesjs.init({
 <tr><td><code>droppable</code>, <code>removable</code>, <code>copyable</code></td><td>Passed to GrapesJS for the root.</td></tr>
 <tr><td><code>extend: 'text'</code></td><td>Build on another GrapesJS type. <code>'text'</code> makes the whole root editable text, as the Quote and Checkout blocks do.</td></tr>
 <tr><td><code>block: false</code> or <code>{ id, label, category }</code></td><td>Skip the block, or rename it.</td></tr>
+<tr><td><code>def.installBlock(editor, { id, label, category, values, content })</code></td><td>Add another block from the same definition: a different id, starting values for traits (<code>values</code>) and different HTML inside the root (<code>content</code>). The contact form and newsletter blocks are two blocks of one form definition.</td></tr>
 </table>
 
 <h3>5. Selectors</h3>
@@ -627,6 +671,7 @@ it('works', () =&gt; {
 <tr><td><code>exportSite</code>, <code>exportSiteFiles</code>, <code>downloadSite</code>, <code>createZip</code>, <code>slugify</code></td><td>functions</td><td>Site export helpers.</td></tr>
 <tr><td><code>sanitizeHtml</code>, <code>createFetchGenerator</code>, <code>runAiGeneration</code>, <code>DEFAULT_SYSTEM</code></td><td>functions</td><td>AI building blocks.</td></tr>
 <tr><td><code>scanFiles</code>, <code>assertSafe</code>, <code>redactSecrets</code>, <code>securityHeaders</code>, <code>contentSecurityPolicy</code></td><td>functions</td><td>The leak scanner and CSP generator, usable on any folder of static files.</td></tr>
+<tr><td><code>createEditor</code></td><td>function</td><td>Editor with the plugin set up, in one call. Imported from <code>grapesjs-advance-components/editor</code>. See <a href="#quickstart">Quick start</a>.</td></tr>
 <tr><td><code>defineComponent</code>, <code>propKey</code>, <code>DefineComponentError</code>, <code>validateCss</code>, <code>assertCss</code>, <code>queryComponents</code></td><td>functions</td><td>The component authoring API. See <a href="#define">Build your own component</a>.</td></tr>
 <tr><td><code>createTestEditor</code>, <code>mountComponent</code>, <code>runScript</code>, <code>verifyScript</code>, <code>assertCss</code>, <code>testRoundTrip</code></td><td>functions</td><td>Test helpers, imported from <code>grapesjs-advance-components/testing</code>.</td></tr>
 <tr><td><code>defaultComponents</code></td><td>const</td><td>The built-in block list, for extending.</td></tr>
@@ -690,6 +735,12 @@ npx promptsite audit ./site --json     # for scripts</code></pre>
   <li>Entries that never produced a block (<code>countdown</code>, <code>imageFeature</code>, <code>tab</code>, <code>form</code>, <code>icon</code>) were removed. <code>checkout</code> now exists for real.</li>
   <li>FAQ, slider, progress bar, divider and form markup moved to <code>aac-*</code> classes. Pages saved with v1 keep their inline styles.</li>
   <li>The browser build is <code>dist/index.global.js</code>.</li>
+</ul>
+<h3>Moving from 2.2 to 2.3</h3>
+<ul>
+  <li><strong>Form settings</strong> (endpoint, send-as, messages, redirect) are now <code>data-*</code> attributes on the <code>&lt;form&gt;</code>, like the checkout button. Forms in saved HTML keep working. A project saved as JSON by 2.2 keeps its endpoint, but loses its custom messages and redirect until you set them again in the trait panel.</li>
+  <li><strong>Pricing cards</strong> wrap the price in <code>&lt;span class="aac-pricing-amount"&gt;</code>. Older cards still render and still check out; their Price field only fills in for the new markup.</li>
+  <li>The four new blocks are added to the default list. Hide any with <code>visible: false</code>.</li>
 </ul>
 
 <h2 id="contributing">Contributing</h2>

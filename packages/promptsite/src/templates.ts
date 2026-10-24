@@ -58,7 +58,7 @@ const pricing = (c: SiteCopy, ctx: RenderContext): Item => ({
     attributes: { class: 'aac-pricing' },
     components: [
       `<h3>${e(p.name)}</h3>`,
-      `<p class="aac-pricing-price">${e(p.price)}${p.period ? `<small>${e(p.period)}</small>` : ''}</p>`,
+      `<p class="aac-pricing-price"><span class="aac-pricing-amount">${e(p.price)}</span>${p.period ? `<small>${e(p.period)}</small>` : ''}</p>`,
       `<ul>${p.features.map((f) => `<li>${e(f)}</li>`).join('')}</ul>`,
       ctx.paymentLink
         ? `<button type="button" class="aac-button aac-checkout" data-mode="link" data-url="${e(ctx.paymentLink)}">${e(p.cta)}</button>`
@@ -66,6 +66,33 @@ const pricing = (c: SiteCopy, ctx: RenderContext): Item => ({
     ],
   })),
 });
+
+/** Testimonials as cards (the `aac-testimonials` block), for templates that have room for a grid. */
+const testimonialCards = (c: SiteCopy): Item[] =>
+  c.testimonials.length
+    ? [`<section class="aac-testimonials aac-cols-${Math.min(3, c.testimonials.length)}">${c.testimonials
+        .map((t) => `<figure class="aac-testimonial"><blockquote>${e(t.quote)}</blockquote><figcaption><strong>${e(t.author)}</strong><span>Customer</span></figcaption></figure>`)
+        .join('')}</section>`]
+    : [];
+
+const initials = (name: string) => name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join('');
+
+const teamGrid = (c: SiteCopy): Item[] =>
+  c.team.length
+    ? [`<section class="aac-team aac-cols-${Math.min(3, c.team.length)}">${c.team
+        .map((m) => `<article class="aac-member"><div class="aac-avatar" aria-hidden="true">${e(initials(m.name))}</div><h3>${e(m.name)}</h3><p>${e(m.role)}</p></article>`)
+        .join('')}</section>`]
+    : [];
+
+/** Posts are placeholders: the date line is left for the owner to fill in. */
+const blogList = (c: SiteCopy): Item[] =>
+  c.posts.length
+    ? [`<section class="aac-blog aac-blog--list">${c.posts
+        .map((p) => `<article class="aac-post"><p class="aac-post-meta">Add a date</p><h3><a href="page:contact">${e(p.title)}</a></h3><p class="aac-post-excerpt">${e(p.excerpt)}</p></article>`)
+        .join('')}</section>`]
+    : [];
+
+const prose = (heading: string, body = '') => `<div class="aac-prose"><h1>${e(heading)}</h1>${body ? `<p>${e(body)}</p>` : ''}</div>`;
 
 const contactPage = (c: SiteCopy, ctx: RenderContext): Item[] => [
   `<div class="aac-prose"><h1>${e(c.contact.heading || 'Get in touch')}</h1><p>${e(c.contact.text)}</p></div>`,
@@ -92,6 +119,19 @@ export const TEMPLATES: Template[] = [
     pages: (c, ctx) => [
       { name: 'Home', items: [hero(c), title('What we do'), features(c), ...testimonials(c), cta(c)] },
       { name: 'About', items: [`<div class="aac-prose"><h1>About ${e(c.name)}</h1><p>${e(c.about)}</p></div>`, ...testimonials(c)] },
+      { name: 'Contact', items: contactPage(c, ctx) },
+    ],
+  },
+  {
+    id: 'small-business',
+    label: 'Small business, five pages',
+    description: 'A full small-business site: home, services with pricing and FAQ, about with the team, a journal and a contact form.',
+    needs: ['name', 'tagline', 'hero', 'features', 'testimonials', 'faq', 'pricing', 'about', 'team', 'posts', 'contact'],
+    pages: (c, ctx) => [
+      { name: 'Home', items: [hero(c), title('What we do'), features(c), title('What customers say'), ...testimonialCards(c), cta(c)] },
+      { name: 'Services', items: [prose('Services'), features(c), title('Plans and prices'), pricing(c, ctx), title('Questions, answered'), faq(c), cta(c)] },
+      { name: 'About', items: [prose(`About ${c.name}`, c.about), title('Meet the team'), ...teamGrid(c), cta(c)] },
+      { name: 'Journal', items: [prose('Journal', `News and ideas from ${c.name}.`), ...blogList(c)] },
       { name: 'Contact', items: contactPage(c, ctx) },
     ],
   },

@@ -21,6 +21,10 @@ export const defaultComponents: ComponentOption[] = [
   { label: 'Newsletter', name: 'newsletter', category: 'Form', componentType: 'newsletter' },
   { label: 'Checkout', name: 'checkout', category: 'Commerce', componentType: 'checkout' },
   { label: 'Pricing', name: 'pricing', category: 'Commerce', componentType: 'pricing' },
+  { label: 'Testimonials', name: 'testimonials', category: 'Social proof', componentType: 'testimonials' },
+  { label: 'Logo wall', name: 'logos', category: 'Social proof', componentType: 'logos' },
+  { label: 'Team', name: 'team', category: 'Sections', componentType: 'team' },
+  { label: 'Blog list', name: 'blog', category: 'Content', componentType: 'blog' },
   { label: 'Image', name: 'image', category: 'Media', componentType: 'image' },
   { label: 'Video', name: 'video', category: 'Media', componentType: 'video' },
   {

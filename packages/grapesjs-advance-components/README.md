@@ -2,7 +2,7 @@
 
 Ready-made, accessible [GrapesJS](https://grapesjs.com) blocks and components, with forms that submit, Stripe checkout, multi-page export, and optional **AI block generation** that works with any model provider (bring your own; no API key is ever stored in this package).
 
-- 32 blocks: hero, features, call to action, FAQ, headings h1–h6, paragraph, quote, list, link, button, divider, progress bar, slider, header, footer, map, image, video, form fields, **contact form and newsletter that submit**, **Stripe checkout button and pricing card**
+- 36 blocks: hero, features, call to action, FAQ, **testimonials, logo wall, team and blog list**, headings h1–h6, paragraph, quote, list, link, button, divider, progress bar, slider, header, footer, map, image, video, form fields, **contact form and newsletter that submit**, **Stripe checkout button and pricing card**
 - **Multi-page editing** with one-call export to a standalone static site (.zip)
 - No Font Awesome or runtime script needed: the FAQ is native `<details>`, the slider is CSS scroll-snap
 - Themeable with CSS custom properties; TypeScript types; ESM, CJS and browser (`<script>`) builds
@@ -40,6 +40,23 @@ Or from a CDN:
 ```
 
 `grapesjs` (≥ 0.21) is a **peer dependency**: the plugin uses the editor you pass it and never bundles its own copy.
+
+### One call: `createEditor`
+
+If you would rather not write `grapesjs.init` yourself, `createEditor` sets the plugin up for you and passes everything else to GrapesJS:
+
+```js
+import 'grapesjs/dist/css/grapes.min.css';
+import { createEditor } from 'grapesjs-advance-components/editor';
+
+const editor = createEditor({
+  container: '#editor',
+  plugin: { custom: [testimonial] },   // options for this plugin
+  storageKey: 'my-site',               // autosaves in this browser; `storage: false` turns it off
+});
+```
+
+It lives in its own entry because it imports `grapesjs`; the main entry does not.
 
 ## Blocks
 
