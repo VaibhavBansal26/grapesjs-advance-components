@@ -589,6 +589,29 @@ npx promptsite deploy ./site --to cloudflare --project my-site --dry-run</code><
 </ul>
 <div class="note warn">The deploy command is covered by tests with a fake runner (the audit gate, the credentials rules, the exact commands and flags). The flags were checked against <code>wrangler@4 pages deploy --help</code> and <code>netlify-cli@27 deploy --help</code>. It has <strong>not</strong> been run against a real Cloudflare or Netlify account by the author. Try it once with <code>--dry-run</code>, then on a throwaway project, before you rely on it.</div>
 
+<h3>Try it safely first</h3>
+<ol>
+  <li><strong>Make a throwaway site:</strong> <code>npx promptsite generate "Test bakery" --template small-business --provider mock --out ./throwaway-site</code>.</li>
+  <li><strong>Dry run:</strong> <code>npx promptsite deploy ./throwaway-site --to cloudflare --project throwaway-site --branch preview --dry-run</code>. It shows the audit result, the exact command, and which credentials are set. It exits with an error until they are set, and deploys nothing.</li>
+  <li><strong>Get credentials, for a throwaway project.</strong>
+    <ul>
+      <li><em>Cloudflare:</em> create the Pages project once (dashboard: Workers &amp; Pages, Create, Pages, Upload assets; or <code>npx wrangler pages project create throwaway-site --production-branch main</code>). Create an API token (My Profile, API Tokens, Custom) with <strong>Account, Cloudflare Pages, Edit</strong> on your account only. Your account ID is on the Workers &amp; Pages overview.</li>
+      <li><em>Netlify:</em> create a site by dropping any folder under Add new site, Deploy manually, and copy its Site ID from Site configuration. Create a personal access token under User settings, Applications.</li>
+    </ul>
+    Type them into your own terminal with <code>export</code>. Never put a token in a command's arguments, in a file you commit, or in a chat.</li>
+  <li><strong>Deploy a preview:</strong> <code>--branch preview</code> on Cloudflare, or no <code>--prod</code> on Netlify. Open the URL the host prints.</li>
+  <li><strong>Clean up:</strong> <code>unset CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID NETLIFY_AUTH_TOKEN</code>, delete the throwaway project or site, and revoke the token.</li>
+</ol>
+<table>
+<tr><th>If you see</th><th>It means</th></tr>
+<tr><td><code>needs Node 22 or newer</code></td><td>Switch Node first. The rest of <code>promptsite</code> runs on 18, but wrangler and the Netlify tool do not.</td></tr>
+<tr><td><code>Deploy stopped: N blocking finding(s)</code></td><td>The audit found something such as a leaked key. Run <code>promptsite audit &lt;dir&gt;</code> for the file and line.</td></tr>
+<tr><td><code>Set CLOUDFLARE_ACCOUNT_ID</code> (or another name)</td><td>That variable is empty or missing in the shell you ran it from.</td></tr>
+<tr><td>Cloudflare "Authentication error" (code 10000)</td><td>The token lacks Cloudflare Pages Edit, or belongs to a different account.</td></tr>
+<tr><td>Project not found</td><td><code>--project</code> must match the Pages project name exactly, and the project must already exist.</td></tr>
+<tr><td><code>--token is not accepted</code></td><td>By design. Use the environment variables.</td></tr>
+</table>
+
 <h3>In CI (GitHub Actions)</h3>
 <pre><code># .github/workflows/site.yml
 on: { push: { branches: [main] } }

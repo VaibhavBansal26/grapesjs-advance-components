@@ -31,14 +31,14 @@ afterEach(async () => {
 type Call = [string, string[], NodeJS.ProcessEnv];
 const fakeRunner = (code = 0) => vi.fn(async (..._call: Call) => code);
 
-async function run(args: string[], runner = fakeRunner()) {
+async function run(args: string[], runner = fakeRunner(), nodeMajor = 22) {
   const logs: string[] = [];
   const log = console.log;
   const err = console.error;
   console.log = (...a: unknown[]) => void logs.push(a.join(' '));
   console.error = (...a: unknown[]) => void logs.push(a.join(' '));
   try {
-    return { code: await main(args, { runner }), out: logs.join('\n'), runner };
+    return { code: await main(args, { runner, nodeMajor }), out: logs.join('\n'), runner };
   } finally {
     console.log = log;
     console.error = err;
@@ -208,6 +208,21 @@ describe('promptsite deploy', () => {
     expect(r.out).toMatch(/CLOUDFLARE_API_TOKEN \(set\)/);
     expect(r.out).not.toContain(TOKEN);
     expect(r.runner).not.toHaveBeenCalled();
+  });
+
+  it.each([18, 20, 21])('stops on Node %i, which the host tools do not support, before running anything', async (node) => {
+    const dir = await site();
+    Object.assign(process.env, { CLOUDFLARE_API_TOKEN: TOKEN, CLOUDFLARE_ACCOUNT_ID: 'acc' });
+    const r = await run(['deploy', dir, '--to', 'cloudflare', '--project', 'p'], fakeRunner(), node);
+    expect(r.code).toBe(1);
+    expect(r.out).toMatch(new RegExp(`needs Node 22 or newer; this is Node ${node}`));
+    expect(r.runner).not.toHaveBeenCalled();
+  });
+
+  it('does not check the Node version for a dry run', async () => {
+    const dir = await site();
+    Object.assign(process.env, { CLOUDFLARE_API_TOKEN: TOKEN, CLOUDFLARE_ACCOUNT_ID: 'acc' });
+    expect((await run(['deploy', dir, '--to', 'cloudflare', '--project', 'p', '--dry-run'], fakeRunner(), 18)).code).toBe(0);
   });
 
   it('marks a production netlify deploy in the plan', async () => {

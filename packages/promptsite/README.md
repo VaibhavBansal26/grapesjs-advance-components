@@ -82,7 +82,7 @@ npx promptsite deploy ./bakery --to netlify --project <site-id> --prod
 npx promptsite deploy ./bakery --to cloudflare --project my-site --dry-run   # show the command, deploy nothing
 ```
 
-It runs the audit first and **stops on a leaked key**, then runs `wrangler@4` or `netlify-cli@27` with the token taken from the environment (tokens are never flags). Both need Node 22+. Netlify makes a draft URL unless you add `--prod`; on Cloudflare the project's production branch goes live. CI and n8n recipes are in the [docs](https://vaibhavbansal26.github.io/grapesjs-advance-components/#deploy).
+It runs the audit first and **stops on a leaked key**, then runs `wrangler@4` or `netlify-cli@27` with the token taken from the environment (tokens are never flags). Both need Node 22+. Netlify makes a draft URL unless you add `--prod`; on Cloudflare the project's production branch goes live. To try it safely: start with `--dry-run`, then a throwaway project and a token scoped to it, then revoke the token. The step-by-step, common errors and CI and n8n recipes are in the [docs](https://vaibhavbansal26.github.io/grapesjs-advance-components/#deploy).
 
 ## Honest limits
 

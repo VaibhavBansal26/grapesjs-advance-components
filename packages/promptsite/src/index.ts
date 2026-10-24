@@ -175,7 +175,14 @@ async function audit(a: Args): Promise<number> {
 const TOKEN_FLAGS = ['token', 'api-token', 'auth-token', 'auth', 'key', 'api-key'];
 
 /** Audit, then hand the folder to the host's own CLI. A leak blocks the deploy; credentials come from the environment only. */
-async function deploy(a: Args, runner: Runner): Promise<number> {
+/** What `deploy` needs from outside; tests replace both. */
+export interface Deps {
+  runner?: Runner;
+  /** The running Node's major version. */
+  nodeMajor?: number;
+}
+
+async function deploy(a: Args, deps: Deps): Promise<number> {
   const bad = TOKEN_FLAGS.find((f) => f in a.flags);
   if (bad) throw new Error(`--${bad} is not accepted: a token on the command line ends up in shell history and process lists. Set CLOUDFLARE_API_TOKEN or NETLIFY_AUTH_TOKEN in the environment instead.`);
   const dir = a._[1] ?? '.';
@@ -199,9 +206,10 @@ async function deploy(a: Args, runner: Runner): Promise<number> {
     return missing.length ? 1 : 0;
   }
   if (missing.length) throw new Error(`Set ${missing.join(' and ')} in the environment, then run again. Create the token in your ${plan.label} account settings.`);
-  if (nodeMajor() < plan.minNode) throw new Error(`${plan.label}'s command line tool needs Node ${plan.minNode} or newer; this is Node ${nodeMajor()}.`);
+  const node = deps.nodeMajor ?? nodeMajor();
+  if (node < plan.minNode) throw new Error(`${plan.label}'s command line tool needs Node ${plan.minNode} or newer; this is Node ${node}.`);
 
-  const code = await runner(plan.command, plan.args, childEnvironment(plan));
+  const code = await (deps.runner ?? spawnRunner)(plan.command, plan.args, childEnvironment(plan));
   console.log(code === 0 ? `\nDeployed to ${plan.label}.` : `\n${plan.label} deploy failed (exit ${code}).`);
   return code === 0 ? 0 : 1;
 }
@@ -239,7 +247,7 @@ async function edit(a: Args) {
   console.log(`Editing ${dir}\n  ${url}\n\nChanges save to project.json automatically. Press Publish in the editor to write ${join(dir, 'public')}.\nCtrl+C to stop.`);
 }
 
-export async function main(argv: string[], deps: { runner?: Runner } = {}): Promise<number> {
+export async function main(argv: string[], deps: Deps = {}): Promise<number> {
   try {
     const a = parseArgs(argv);
     const cmd = a._[0];
@@ -257,7 +265,7 @@ export async function main(argv: string[], deps: { runner?: Runner } = {}): Prom
       return 0;
     }
     if (cmd === 'audit') return await audit(a);
-    if (cmd === 'deploy') return await deploy(a, deps.runner ?? spawnRunner);
+    if (cmd === 'deploy') return await deploy(a, deps);
     if (cmd === 'generate') await generate(a);
     else if (cmd === 'build') await build(a);
     else if (cmd === 'edit' || cmd === 'serve') {
