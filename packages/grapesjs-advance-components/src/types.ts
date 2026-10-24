@@ -30,7 +30,12 @@ export type ComponentKind =
   | 'testimonials'
   | 'logos'
   | 'team'
-  | 'blog';
+  | 'blog'
+  | 'stats'
+  | 'steps'
+  | 'banner'
+  | 'compare'
+  | 'tabs';
 
 export interface FormElementOptions {
   type?: string;

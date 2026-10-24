@@ -1,7 +1,7 @@
 {
   "name": "grapesjs-advance-components",
   "version": "2.3.0",
-  "description": "Ready-made, accessible GrapesJS blocks and components: forms that submit, Stripe checkout, multi-page export and bring-your-own-model AI block generation.",
+  "description": "41 accessible, themeable GrapesJS blocks (pricing, testimonials, team, tabs, forms that submit, Stripe checkout), defineComponent for your own blocks, multi-page export and bring-your-own-model AI. No runtime dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -66,11 +66,20 @@
     "ai",
     "blocks",
     "components",
+    "define-component",
     "forms",
     "grapesjs",
+    "grapesjs-components",
     "grapesjs-plugin",
+    "landing-page",
+    "no-code",
     "page-builder",
-    "stripe"
+    "pricing",
+    "stripe",
+    "stripe-checkout",
+    "tabs",
+    "testimonials",
+    "website-builder"
   ],
   "license": "MIT",
   "peerDependencies": {

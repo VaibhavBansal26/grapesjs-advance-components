@@ -10,6 +10,7 @@ import { ICONS, icon } from './ui';
 
 const COLUMNS = ['1', '2', '3'] as const;
 const columns = (prefix: string) => ({ '1': `${prefix}-cols-1`, '2': `${prefix}-cols-2`, '3': `${prefix}-cols-3` });
+const STAT_COLUMNS = ['2', '3', '4'] as const;
 
 /** What goes inside a pricing card, with the checkout settings from the `checkoutElement` option. */
 export function pricingInner(ce: Parameters<typeof checkoutMarkup>[0] = {}): string {
@@ -111,4 +112,144 @@ export const blog = defineComponent({
   },
 });
 
-export const sections = [pricing, testimonials, logos, team, blog];
+export const stats = defineComponent({
+  id: 'aac-stats',
+  label: 'Stats',
+  category: 'Social proof',
+  icon: icon('<path d="M5 20V10M12 20V4M19 20v-7"/>'),
+  html: `<section class="aac-stats aac-cols-3">${[['10k+', 'Customers'], ['99.9%', 'Uptime'], ['24/7', 'Support']]
+    .map(([v, l]) => `<div class="aac-stat"><strong class="aac-stat-value">${v}</strong><span class="aac-stat-label">${l}</span></div>`)
+    .join('')}</section>`,
+  detect: '.aac-stats',
+  block: { id: 'stats-block' },
+  locked: true,
+  repeat: ['.aac-stat'],
+  editable: ['.aac-stat-value', '.aac-stat-label'],
+  traits: {
+    columns: { type: 'select', label: 'Columns', options: [...STAT_COLUMNS], default: '3', bind: { class: { '2': 'aac-cols-2', '3': 'aac-cols-3', '4': 'aac-cols-4' } } },
+  },
+});
+
+export const steps = defineComponent({
+  id: 'aac-steps',
+  label: 'Steps',
+  category: 'Sections',
+  icon: icon('<circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><path d="M6 8v8M12 6h8M12 18h8"/>'),
+  html: `<ol class="aac-steps aac-steps--vertical">${[['Tell us what you need', 'A sentence or two about the job.'], ['We get to work', 'Say what happens next and how long it takes.'], ['You are done', 'Explain what the customer ends up with.']]
+    .map(([t, d]) => `<li class="aac-step"><h3>${t}</h3><p>${d}</p></li>`)
+    .join('')}</ol>`,
+  detect: '.aac-steps',
+  block: { id: 'steps-block' },
+  locked: true,
+  repeat: ['.aac-step'],
+  editable: ['h3', 'p'],
+  traits: {
+    layout: {
+      type: 'select',
+      label: 'Layout',
+      options: [{ value: 'vertical', label: 'Vertical' }, { value: 'horizontal', label: 'Horizontal' }],
+      default: 'vertical',
+      bind: { class: { vertical: 'aac-steps--vertical', horizontal: 'aac-steps--horizontal' } },
+    },
+  },
+});
+
+export const banner = defineComponent({
+  id: 'aac-banner',
+  label: 'Banner',
+  category: 'Sections',
+  icon: icon('<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 12h6"/>'),
+  html: '<aside class="aac-banner aac-banner--info" role="note"><p><strong>New:</strong> say what is new in one short line. <a href="#">Learn more</a></p></aside>',
+  detect: '.aac-banner',
+  block: { id: 'banner-block' },
+  locked: true,
+  editable: ['p'],
+  traits: {
+    tone: {
+      type: 'select',
+      label: 'Tone',
+      options: ['info', 'success', 'warning'],
+      default: 'info',
+      bind: { class: { info: 'aac-banner--info', success: 'aac-banner--success', warning: 'aac-banner--warning' } },
+    },
+  },
+});
+
+export const compare = defineComponent({
+  id: 'aac-compare',
+  label: 'Comparison table',
+  category: 'Commerce',
+  icon: icon('<rect x="3" y="5" width="18" height="14" rx="1"/><path d="M3 10h18M9 5v14M15 5v14"/>'),
+  html: `<div class="aac-compare-wrap"><table class="aac-compare aac-compare--striped"><thead><tr><th scope="col">Feature</th><th scope="col">Starter</th><th scope="col">Pro</th></tr></thead><tbody>${[['Projects', '3', 'Unlimited'], ['Support', 'Email', 'Priority'], ['Custom domain', 'No', 'Yes']]
+    .map(([f, a, b]) => `<tr><th scope="row">${f}</th><td>${a}</td><td>${b}</td></tr>`)
+    .join('')}</tbody></table></div>`,
+  detect: '.aac-compare-wrap',
+  block: { id: 'compare-block' },
+  locked: true,
+  repeat: ['tbody tr'],
+  editable: ['th', 'td'],
+  traits: {
+    striped: { type: 'checkbox', label: 'Striped rows', default: true, bind: { classIf: 'aac-compare--striped', on: '.aac-compare' } },
+  },
+});
+
+/**
+ * Tabs. Without JavaScript every panel is shown one under the other, so the content is never hidden.
+ * With it the script turns them into an accessible tab widget: roles and ids, arrow keys, Home and End.
+ * The three tabs are fixed (each tab needs its own panel), and their labels and panels are edited in place.
+ */
+export const tabs = defineComponent({
+  id: 'aac-tabs',
+  label: 'Tabs',
+  category: 'Sections',
+  icon: icon('<path d="M3 8h6l2-3h10v14H3z"/>'),
+  html: `<div class="aac-tabs"><div class="aac-tablist">${['Overview', 'Details', 'Pricing']
+    .map((t) => `<button type="button" class="aac-tab">${t}</button>`)
+    .join('')}</div>${['What it is, in a sentence or two.', 'The details people ask about.', 'What it costs and what is included.']
+    .map((t) => `<div class="aac-tabpanel"><p>${t}</p></div>`)
+    .join('')}</div>`,
+  detect: '.aac-tabs',
+  block: { id: 'tabs-block' },
+  locked: true,
+  editable: ['.aac-tab', '.aac-tabpanel'],
+  runInEditor: false,
+  script({ el }) {
+    const tabs = Array.prototype.slice.call(el.querySelectorAll('.aac-tab')) as HTMLElement[];
+    const panels = Array.prototype.slice.call(el.querySelectorAll('.aac-tabpanel')) as HTMLElement[];
+    if (!tabs.length || tabs.length !== panels.length) return;
+    const uid = 'aac-tabs-' + Math.random().toString(36).slice(2, 8);
+    const list = el.querySelector('.aac-tablist');
+    if (list) {
+      list.setAttribute('role', 'tablist');
+    }
+    el.classList.add('aac-tabs--js');
+    const select = (index: number, focus?: boolean) => {
+      tabs.forEach((tab, i) => {
+        const on = i === index;
+        tab.setAttribute('aria-selected', on ? 'true' : 'false');
+        tab.setAttribute('tabindex', on ? '0' : '-1');
+        panels[i]!.hidden = !on;
+      });
+      if (focus) tabs[index]!.focus();
+    };
+    tabs.forEach((tab, i) => {
+      tab.setAttribute('role', 'tab');
+      tab.id = uid + '-tab-' + i;
+      tab.setAttribute('aria-controls', uid + '-panel-' + i);
+      panels[i]!.setAttribute('role', 'tabpanel');
+      panels[i]!.id = uid + '-panel-' + i;
+      panels[i]!.setAttribute('aria-labelledby', tab.id);
+      tab.addEventListener('click', () => select(i));
+      tab.addEventListener('keydown', (e: KeyboardEvent) => {
+        const last = tabs.length - 1;
+        const next = e.key === 'ArrowRight' ? (i === last ? 0 : i + 1) : e.key === 'ArrowLeft' ? (i === 0 ? last : i - 1) : e.key === 'Home' ? 0 : e.key === 'End' ? last : -1;
+        if (next < 0) return;
+        e.preventDefault();
+        select(next, true);
+      });
+    });
+    select(0);
+  },
+});
+
+export const sections = [pricing, testimonials, logos, team, blog, stats, steps, banner, compare, tabs];

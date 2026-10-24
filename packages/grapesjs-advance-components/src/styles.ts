@@ -163,6 +163,46 @@ export const baseCss = `
 .aac-post h3 a:hover{color:${accent}}
 .aac-post-excerpt{margin:0;color:${muted};line-height:1.6}
 
+.aac-cols-4{grid-template-columns:repeat(4,minmax(0,1fr))}
+
+.aac-stats{${base};display:grid;gap:20px;margin:32px 0;text-align:center}
+.aac-stat{padding:20px 12px}
+.aac-stat-value{display:block;font-size:2.5rem;line-height:1.1;font-weight:700;color:${accent}}
+.aac-stat-label{display:block;margin-top:6px;color:${muted}}
+
+.aac-steps{${base};display:grid;gap:20px;margin:24px 0;padding:0;list-style:none;counter-reset:aac-step}
+.aac-steps--vertical{grid-template-columns:minmax(0,1fr)}
+.aac-steps--horizontal{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.aac-step{position:relative;margin:0;padding:6px 0 6px 56px;counter-increment:aac-step}
+.aac-step::before{content:counter(aac-step);position:absolute;left:0;top:4px;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:50%;background-color:${accent};color:${accentFg};font-weight:700}
+.aac-steps--horizontal .aac-step{padding:56px 0 0}
+.aac-step h3{margin:0 0 6px;font-size:1.1rem}
+.aac-step p{margin:0;color:${muted};line-height:1.6}
+
+.aac-banner{${base};margin:16px 0;padding:12px 18px;${r};${box(border)};background-color:${soft}}
+.aac-banner p{margin:0;line-height:1.5}
+.aac-banner a{color:inherit;font-weight:600}
+.aac-banner--info{border-left-width:4px;border-left-color:${accent}}
+.aac-banner--success{border-left-width:4px;border-left-color:#16a34a}
+.aac-banner--warning{border-left-width:4px;border-left-color:#d97706}
+
+.aac-compare-wrap{${base};margin:24px 0;overflow-x:auto}
+.aac-compare{width:100%;border-collapse:collapse;text-align:left}
+.aac-compare th,.aac-compare td{padding:12px 16px;${side('bottom', border)}}
+.aac-compare thead th{font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;color:${muted}}
+.aac-compare tbody th{font-weight:600}
+.aac-compare--striped tbody tr:nth-child(even){background-color:${soft}}
+
+.aac-tabs{${base};margin:24px 0}
+.aac-tablist{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.aac-tab{padding:9px 16px;border-width:0;${r};background-color:transparent;color:${muted};font:inherit;font-weight:600;cursor:pointer}
+.aac-tab:hover{background-color:${soft}}
+.aac-tab:focus-visible{${focusRing}}
+.aac-tabs--js .aac-tablist{${side('bottom', border)};gap:0}
+.aac-tabs--js .aac-tab[aria-selected=true]{color:${accent};${side('bottom', accent, '2px')}}
+.aac-tabpanel{padding:8px 4px}
+.aac-tabpanel p{margin:0;line-height:1.65}
+
 .aac-site{min-height:100vh}
 .aac-page{max-width:1040px;margin:0 auto;padding:0 24px 64px}
 
@@ -175,7 +215,8 @@ export const baseCss = `
 .aac-slide{padding:36px 22px}
 .aac-slide-quote{font-size:1.15rem}
 .aac-pricing{max-width:none}
-.aac-cols-2,.aac-cols-3{grid-template-columns:minmax(0,1fr)}
+.aac-cols-2,.aac-cols-3,.aac-cols-4{grid-template-columns:minmax(0,1fr)}
+.aac-steps--horizontal{grid-template-columns:minmax(0,1fr)}
 }
 @media (prefers-reduced-motion:reduce){
 .aac-faq summary::after,.aac-progress-inner,.aac-button,.aac-field input,.aac-field select,.aac-field textarea{transition:none}

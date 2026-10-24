@@ -30,7 +30,7 @@
 <script src="dist/index.global.js"></script>
 <script>
   const ids = ['header-block','hero-block','features-block','faq-block','pricing-block','checkout-button-block','form-block','newsletter-block','cta-block',
-    'quote-block','slider-block','progress-bar-block','dropdown-block','button-block','divider-block','list-block','footer-block'];
+    'quote-block','slider-block','progress-bar-block','testimonials-block','logos-block','stats-block','steps-block','team-block','blog-block','banner-block','compare-block','tabs-block','dropdown-block','button-block','divider-block','list-block','footer-block'];
   const editor = window.editor = grapesjs.init({
     container: '#gjs', height: '100%', storageManager: false,
     plugins: ['grapesjs-advance-components'],
@@ -38,7 +38,7 @@
   editor.onReady(() => {
     // Typography belongs to the host page, so the demo sets what a real site would.
     editor.addStyle('body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.6;margin:0}' +
-      'h1{margin:28px 28px 8px}p{margin:8px 28px}.aac-field,.aac-faq,.aac-slider,.aac-quote,.aac-progress,.aac-divider,.aac-button,.aac-pricing{margin-left:28px;margin-right:28px}.aac-pricing{margin-left:auto;margin-right:auto}');
+      'h1{margin:28px 28px 8px}p{margin:8px 28px}.aac-field,.aac-faq,.aac-slider,.aac-quote,.aac-progress,.aac-divider,.aac-button,.aac-pricing,.aac-testimonials,.aac-logos,.aac-stats,.aac-steps,.aac-team,.aac-blog,.aac-banner,.aac-compare-wrap,.aac-tabs{margin-left:28px;margin-right:28px}.aac-pricing{margin-left:auto;margin-right:auto}');
     editor.setComponents('');
     ids.forEach((id) => editor.addComponents(editor.Blocks.get(id).getContent()));
   });

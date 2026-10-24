@@ -1,7 +1,7 @@
 {
   "name": "promptsite",
   "version": "0.3.0",
-  "description": "Generate a multi-page website from one sentence with your own model, polish it in a visual editor, audit it for leaks, and export plain static files.",
+  "description": "One sentence to an audited, ready-to-deploy website: generate a multi-page site with your own model, edit it visually, block leaked secrets, and deploy to Cloudflare Pages or Netlify.",
   "type": "module",
   "bin": {
     "promptsite": "./dist/cli.js"
@@ -29,12 +29,20 @@
   "keywords": [
     "ai",
     "cli",
+    "cloudflare-pages",
+    "deploy",
     "generator",
     "grapesjs",
+    "landing-page",
     "n8n",
+    "netlify",
+    "page-builder",
+    "secret-scanning",
+    "security",
     "site-generator",
     "static-site",
-    "website"
+    "website",
+    "website-builder"
   ],
   "license": "MIT",
   "dependencies": {

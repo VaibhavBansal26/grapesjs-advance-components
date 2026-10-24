@@ -1,8 +1,10 @@
 # grapesjs-advance-components
 
-Ready-made, accessible [GrapesJS](https://grapesjs.com) blocks and components, with forms that submit, Stripe checkout, multi-page export, and optional **AI block generation** that works with any model provider (bring your own; no API key is ever stored in this package).
+[![CI](https://github.com/VaibhavBansal26/grapesjs-advance-components/actions/workflows/ci.yml/badge.svg)](https://github.com/VaibhavBansal26/grapesjs-advance-components/actions/workflows/ci.yml) [![npm](https://img.shields.io/npm/v/grapesjs-advance-components)](https://www.npmjs.com/package/grapesjs-advance-components) [![MIT](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/VaibhavBansal26/grapesjs-advance-components/blob/main/LICENSE)
 
-- 36 blocks: hero, features, call to action, FAQ, **testimonials, logo wall, team and blog list**, headings h1–h6, paragraph, quote, list, link, button, divider, progress bar, slider, header, footer, map, image, video, form fields, **contact form and newsletter that submit**, **Stripe checkout button and pricing card**
+**41 accessible, themeable [GrapesJS](https://grapesjs.com) blocks** with forms that submit, Stripe checkout, multi-page export, `defineComponent` for your own blocks, and optional **AI block generation** that works with any model provider (bring your own; no API key is ever stored in this package). No runtime dependencies; `grapesjs` (0.21 or newer) is a peer dependency.
+
+- 41 blocks: hero, features, call to action, FAQ, **testimonials, logo wall, team, blog list, stats, steps, banner, comparison table and tabs**, headings h1–h6, paragraph, quote, list, link, button, divider, progress bar, slider, header, footer, map, image, video, form fields, **contact form and newsletter that submit**, **Stripe checkout button and pricing card**
 - **Multi-page editing** with one-call export to a standalone static site (.zip)
 - No Font Awesome or runtime script needed: the FAQ is native `<details>`, the slider is CSS scroll-snap
 - Themeable with CSS custom properties; TypeScript types; ESM, CJS and browser (`<script>`) builds
@@ -57,6 +59,41 @@ const editor = createEditor({
 ```
 
 It lives in its own entry because it imports `grapesjs`; the main entry does not.
+
+### In React or Vue
+
+`createEditor` returns the GrapesJS editor, so the only thing a framework needs to do is create it once after mount and destroy it on unmount. These are patterns, not extra packages, and they have not been run inside a React or Vue project yet.
+
+```jsx
+// React
+import { useEffect, useRef } from 'react';
+import 'grapesjs/dist/css/grapes.min.css';
+import { createEditor } from 'grapesjs-advance-components/editor';
+
+export function Builder() {
+  const host = useRef(null);
+  useEffect(() => {
+    const editor = createEditor({ container: host.current, storageKey: 'my-site' });
+    return () => editor.destroy();
+  }, []);
+  return <div ref={host} />;
+}
+```
+
+```vue
+<!-- Vue 3 -->
+<script setup>
+import { onBeforeUnmount, onMounted, ref } from 'vue';
+import 'grapesjs/dist/css/grapes.min.css';
+import { createEditor } from 'grapesjs-advance-components/editor';
+
+const host = ref(null);
+let editor;
+onMounted(() => (editor = createEditor({ container: host.value, storageKey: 'my-site' })));
+onBeforeUnmount(() => editor?.destroy());
+</script>
+<template><div ref="host" /></template>
+```
 
 ## Blocks
 
