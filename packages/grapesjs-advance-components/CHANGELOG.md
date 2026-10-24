@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.3.0](https://github.com/VaibhavBansal26/grapesjs-advance-components/compare/grapesjs-advance-components-v2.2.0...grapesjs-advance-components-v2.3.0) (2026-10-24)
+
+
+### Features
+
+* add section blocks, createEditor and a five-page small-business template ([5b6618c](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/5b6618ce60fbc174a58f7f15fb781e10656df3e3))
+* section blocks, createEditor and a five-page small-business template ([01896d3](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/01896d36cccbeaad30a86184575043cd9fb3e626))
+
 ## [2.2.0](https://github.com/VaibhavBansal26/grapesjs-advance-components/compare/grapesjs-advance-components-v1.0.7...grapesjs-advance-components-v2.2.0) (2026-10-23)
 
 
