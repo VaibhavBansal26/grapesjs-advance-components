@@ -43,6 +43,7 @@
   <a href="#forms">Forms</a>
   <a href="#pages">Multi-page sites</a>
   <a href="#automation">Automation (n8n, CI)</a>
+  <a href="#deploy">Deploy (Cloudflare, Netlify)</a>
   <div class="group">Build your own</div>
   <a href="#define">defineComponent</a>
   <div class="group">Reference</div>
@@ -171,7 +172,7 @@ npx promptsite generate "$BRIEF" --template local-business --name "$CLIENT" --ac
 npx promptsite edit "sites/$CLIENT"
 
 # 3. rebuild from the committed project in CI, then deploy the static files
-npx promptsite build "sites/$CLIENT" &amp;&amp; your-deploy-tool "sites/$CLIENT/public"</code></pre>
+npx promptsite build "sites/$CLIENT" &amp;&amp; npx promptsite deploy "sites/$CLIENT" --to netlify --project "$SITE_ID" --prod   # see <a href="#deploy">Deploy</a></code></pre>
 
 <h2 id="install">Install</h2>
 <pre><code>npm i grapesjs grapesjs-advance-components</code></pre>
@@ -551,8 +552,90 @@ npx promptsite serve --root ./sites --port 8787           # http://127.0.0.1:878
 <pre><code># .github/workflows/site.yml
 - run: npx promptsite build ./site                  # re-render from the committed project.json
 - run: npx promptsite audit ./site --strict         # fails the build on a leak or unsafe markup
-- run: your-deploy-tool ./site/public</code></pre>
+- run: npx promptsite deploy ./site --to cloudflare --project my-site --branch main   # audits again, then uploads (see Deploy)</code></pre>
 <p><code>promptsite audit</code> exits non-zero when it finds a high-severity problem (or a medium one with <code>--strict</code>) and supports <code>--json</code> for scripts. It scans <code>public/</code>, <code>project.json</code> and <code>promptsite.json</code>, or any folder you point it at.</p>
+
+<h2 id="deploy">Deploy to Cloudflare Pages or Netlify</h2>
+<p><code>promptsite deploy</code> audits the site, then hands the folder to the host's own command line tool. It does not talk to Cloudflare or Netlify itself and it keeps no credentials, so it can only do what your token already allows.</p>
+<pre><code># Cloudflare Pages
+export CLOUDFLARE_API_TOKEN=...  CLOUDFLARE_ACCOUNT_ID=...
+npx promptsite deploy ./site --to cloudflare --project my-site --branch main
+
+# Netlify (a draft URL unless you add --prod)
+export NETLIFY_AUTH_TOKEN=...
+npx promptsite deploy ./site --to netlify --project &lt;site-id&gt; --prod
+
+# See exactly what would run, deploy nothing
+npx promptsite deploy ./site --to cloudflare --project my-site --dry-run</code></pre>
+<table>
+<tr><th>Step</th><th>What happens</th></tr>
+<tr><td>1. Find the files</td><td>Uploads <code>&lt;dir&gt;/public</code> for a generated site, or the folder itself if it holds an <code>index.html</code>.</td></tr>
+<tr><td>2. Audit</td><td>The same scan as <code>promptsite audit</code>, over <code>public/</code>, <code>project.json</code> and <code>promptsite.json</code>. A high-severity finding (a leaked key, say) <strong>stops the deploy</strong> before anything is uploaded. <code>--strict</code> also stops on medium findings.</td></tr>
+<tr><td>3. Credentials</td><td>Read from the environment. If one is missing you get its name, never a value. <code>--dry-run</code> shows which are set.</td></tr>
+<tr><td>4. Upload</td><td>Runs <code>wrangler@4 pages deploy</code> or <code>netlify-cli@27 deploy</code> with <code>npx</code>, with no shell, so nothing in your arguments is interpreted. Their output is shown as it comes.</td></tr>
+</table>
+<table>
+<tr><th>Option</th><th>Cloudflare Pages</th><th>Netlify</th></tr>
+<tr><td><code>--project</code></td><td>The Pages project name (or <code>CLOUDFLARE_PAGES_PROJECT</code>). Create the project once in the dashboard or with <code>wrangler pages project create</code>.</td><td>The site ID (or <code>NETLIFY_SITE_ID</code>), under Site configuration.</td></tr>
+<tr><td>Live or preview</td><td><code>--branch &lt;name&gt;</code>: the project's production branch goes live, any other branch is a preview.</td><td>A draft URL by default; <code>--prod</code> makes it live.</td></tr>
+<tr><td>Credentials</td><td><code>CLOUDFLARE_API_TOKEN</code> (an API token that can edit Pages) and <code>CLOUDFLARE_ACCOUNT_ID</code></td><td><code>NETLIFY_AUTH_TOKEN</code> (a personal access token)</td></tr>
+</table>
+<h3>Safety</h3>
+<ul>
+  <li><strong>Tokens are never flags.</strong> <code>--token</code>, <code>--auth</code> and similar are refused, because a token on the command line lands in shell history and process lists. The Netlify site ID is passed to the Netlify tool through its environment, and your <code>ANTHROPIC_API_KEY</code> and <code>PROMPTSITE_API_TOKEN</code> are removed from the environment the host's tool gets.</li>
+  <li><strong>Use a token scoped to one project.</strong> A Cloudflare token limited to Pages and one account, and a Netlify token you can revoke, cap what a mistake can do.</li>
+  <li><strong>Node 22 or newer.</strong> Both host tools need it, even though the rest of <code>promptsite</code> runs on 18. You get a clear message instead of a crash from the host.</li>
+  <li><strong>The first run downloads the host's tool</strong> with <code>npx</code>. It is pinned to a major version (<code>wrangler@4</code>, <code>netlify-cli@27</code>), so a new major release cannot change how your deploy behaves.</li>
+</ul>
+<div class="note warn">The deploy command is covered by tests with a fake runner (the audit gate, the credentials rules, the exact commands and flags). The flags were checked against <code>wrangler@4 pages deploy --help</code> and <code>netlify-cli@27 deploy --help</code>. It has <strong>not</strong> been run against a real Cloudflare or Netlify account by the author. Try it once with <code>--dry-run</code>, then on a throwaway project, before you rely on it.</div>
+
+<h3>Try it safely first</h3>
+<ol>
+  <li><strong>Make a throwaway site:</strong> <code>npx promptsite generate "Test bakery" --template small-business --provider mock --out ./throwaway-site</code>.</li>
+  <li><strong>Dry run:</strong> <code>npx promptsite deploy ./throwaway-site --to cloudflare --project throwaway-site --branch preview --dry-run</code>. It shows the audit result, the exact command, and which credentials are set. It exits with an error until they are set, and deploys nothing.</li>
+  <li><strong>Get credentials, for a throwaway project.</strong>
+    <ul>
+      <li><em>Cloudflare:</em> create the Pages project once (dashboard: Workers &amp; Pages, Create, Pages, Upload assets; or <code>npx wrangler pages project create throwaway-site --production-branch main</code>). Create an API token (My Profile, API Tokens, Custom) with <strong>Account, Cloudflare Pages, Edit</strong> on your account only. Your account ID is on the Workers &amp; Pages overview.</li>
+      <li><em>Netlify:</em> create a site by dropping any folder under Add new site, Deploy manually, and copy its Site ID from Site configuration. Create a personal access token under User settings, Applications.</li>
+    </ul>
+    Type them into your own terminal with <code>export</code>. Never put a token in a command's arguments, in a file you commit, or in a chat.</li>
+  <li><strong>Deploy a preview:</strong> <code>--branch preview</code> on Cloudflare, or no <code>--prod</code> on Netlify. Open the URL the host prints.</li>
+  <li><strong>Clean up:</strong> <code>unset CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID NETLIFY_AUTH_TOKEN</code>, delete the throwaway project or site, and revoke the token.</li>
+</ol>
+<table>
+<tr><th>If you see</th><th>It means</th></tr>
+<tr><td><code>needs Node 22 or newer</code></td><td>Switch Node first. The rest of <code>promptsite</code> runs on 18, but wrangler and the Netlify tool do not.</td></tr>
+<tr><td><code>Deploy stopped: N blocking finding(s)</code></td><td>The audit found something such as a leaked key. Run <code>promptsite audit &lt;dir&gt;</code> for the file and line.</td></tr>
+<tr><td><code>Set CLOUDFLARE_ACCOUNT_ID</code> (or another name)</td><td>That variable is empty or missing in the shell you ran it from.</td></tr>
+<tr><td>Cloudflare "Authentication error" (code 10000)</td><td>The token lacks Cloudflare Pages Edit, or belongs to a different account.</td></tr>
+<tr><td>Project not found</td><td><code>--project</code> must match the Pages project name exactly, and the project must already exist.</td></tr>
+<tr><td><code>--token is not accepted</code></td><td>By design. Use the environment variables.</td></tr>
+</table>
+
+<h3>In CI (GitHub Actions)</h3>
+<pre><code># .github/workflows/site.yml
+on: { push: { branches: [main] } }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npx promptsite build ./site        # re-render from the committed project.json
+      - run: npx promptsite deploy ./site --to cloudflare --project my-site --branch main --strict
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      # or Netlify:
+      # - run: npx promptsite deploy ./site --to netlify --project ${{ vars.NETLIFY_SITE_ID }} --prod --strict
+      #   env: { NETLIFY_AUTH_TOKEN: "${{ secrets.NETLIFY_AUTH_TOKEN }}" }</code></pre>
+<p>Store the tokens as repository secrets. For a pull request, drop <code>--branch main</code> (Cloudflare) or <code>--prod</code> (Netlify) to get a preview URL instead of a live deploy.</p>
+
+<h3>From n8n or another workflow tool</h3>
+<p>The <a href="#automation">HTTP API</a> makes the site; the deploy step is a command. In n8n, add an <strong>Execute Command</strong> node after the generate step (it needs n8n to run on a machine with Node 22 and the token variables in its environment):</p>
+<pre><code>npx promptsite deploy /data/sites/{{ $json.slug }} --to netlify --project {{ $env.NETLIFY_SITE_ID }} --prod</code></pre>
+<p>The API itself has no deploy endpoint on purpose: a network service that holds your hosting token would be a much bigger target than a command you run where the token already lives. The n8n workflow in the repository does not include this step, and I have not run it in a live n8n.</p>
 
 <h2 id="define">Build your own component</h2>
 <p><code>defineComponent</code> turns a piece of HTML into a GrapesJS component with a block, settings in the trait panel, CSS and an optional runtime script. It is the same API the Progress bar, Quote, Hero and Checkout blocks are built with. <strong>The HTML is the source of truth</strong>: every setting lives in the markup, so it survives export, re-import and <code>promptsite build</code> with no extra work.</p>
@@ -701,7 +784,7 @@ it('works', () =&gt; {
 <tr><th>You need</th><th>Options</th></tr>
 <tr><td>AI inside the editor</td><td>The GrapesJS team offers an <strong>AI Chat plugin in the Studio SDK</strong> (chat panel, section generation, context kept between sessions). That is a separate product from the open-source core, so check its pricing and licence. This package is a smaller alternative for the open-source core: one <code>generate</code> function, any provider, sanitized output, no chat UI or streaming.</td></tr>
 <tr><td>A zip of a single page</td><td>The official <a href="https://www.npmjs.com/package/grapesjs-plugin-export"><code>grapesjs-plugin-export</code></a> does this. This package's zip export covers all pages and has no dependencies.</td></tr>
-<tr><td>A deploy dashboard</td><td>Community plugins exist for Netlify. This package stops at producing the files.</td></tr>
+<tr><td>A deploy dashboard</td><td>Not included. <code>promptsite deploy</code> publishes to Cloudflare Pages or Netlify from the command line (see <a href="#deploy">Deploy</a>); there is no deploy button in the editor.</td></tr>
 </table>
 <div class="note">If you only need a handful of blocks, <code>grapesjs-blocks-basic</code> is smaller. This package earns its place when you want accessible blocks <em>plus</em> AI, checkout or multi-page export in one tested bundle.</div>
 

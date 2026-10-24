@@ -25,6 +25,7 @@ The model writes **validated JSON copy**, not markup. Templates render that copy
 | `promptsite edit <dir>` | Visual editor on localhost (autosave, **Publish** writes `public/`) |
 | `promptsite build <dir>` | Re-render `project.json` to `public/` (for CI) |
 | `promptsite audit <dir>` | Scan a site or any folder for leaked secrets and unsafe markup |
+| `promptsite deploy <dir> --to cloudflare\|netlify` | Audit, then publish to Cloudflare Pages or Netlify (a leak stops it) |
 | `promptsite serve --root <dir>` | HTTP API for n8n, Zapier or cron (needs `PROMPTSITE_API_TOKEN`) |
 | `promptsite templates` | List the templates |
 
@@ -69,11 +70,25 @@ npx promptsite serve --root ./sites      # http://127.0.0.1:8787
 - run: npx promptsite build ./site && npx promptsite audit ./site --strict
 ```
 
+## Deploy
+
+```bash
+export CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=...
+npx promptsite deploy ./bakery --to cloudflare --project my-site --branch main
+
+export NETLIFY_AUTH_TOKEN=...
+npx promptsite deploy ./bakery --to netlify --project <site-id> --prod
+
+npx promptsite deploy ./bakery --to cloudflare --project my-site --dry-run   # show the command, deploy nothing
+```
+
+It runs the audit first and **stops on a leaked key**, then runs `wrangler@4` or `netlify-cli@27` with the token taken from the environment (tokens are never flags). Both need Node 22+. Netlify makes a draft URL unless you add `--prod`; on Cloudflare the project's production branch goes live. To try it safely: start with `--dry-run`, then a throwaway project and a token scoped to it, then revoke the token. The step-by-step, common errors and CI and n8n recipes are in the [docs](https://vaibhavbansal26.github.io/grapesjs-advance-components/#deploy).
+
 ## Honest limits
 
 - The copy is a draft. Prices and testimonials are placeholders the tool tells you to replace, and it never invents facts you did not give it.
 - Tested end to end with the mock provider and a fake API server; output quality with a live model depends on the model and your brief.
-- Pages have no images yet, and deployment is not included: `public/` is plain files for any static host.
+- Pages have no images yet. `public/` is plain files for any static host, and `promptsite deploy` publishes them to Cloudflare Pages or Netlify (tested with a fake runner, not yet run against a real account by the author).
 - Needs Node 18 or newer. The first run installs `jsdom` and `grapesjs` (the plugin renders in a headless editor).
 
 ## Development
