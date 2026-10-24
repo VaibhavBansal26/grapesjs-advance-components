@@ -15,7 +15,7 @@ The `promptsite` CLI depends on the plugin, so the plugin is always published fi
 
 Publishing uses **npm trusted publishing** (OIDC), so no npm token is stored in GitHub. That only works for packages that already exist on npm, so `promptsite` needs one manual bootstrap publish.
 
-Both packages are forced to their first versions in `release-please-config.json` with `release-as`: the plugin goes 1.0.7 → **2.2.0**, `promptsite` goes 0.0.1 → **0.1.0**. (2.0.0 and 2.1.0 were published automatically from the first two merges, before the packages were split, so the real release starts at 2.2.0. Once 2.2.0 is out, remove both `release-as` lines so versions follow the commits.)
+The first releases were forced with `release-as` (plugin 1.0.7 → **2.2.0**, `promptsite` 0.0.1 → **0.1.0**) and that is now removed, so from here versions follow the commits: `fix:` bumps the patch, `feat:` the minor, and `feat!:` or a `BREAKING CHANGE:` footer the major. (2.0.0 and 2.1.0 on npm were published automatically from the first two merges, before the packages were split; they lack the `promptsite` exports, so use 2.2.0 or later.)
 
 1. **Bootstrap `promptsite` by hand** (once, from your machine):
    ```bash
@@ -27,7 +27,6 @@ Both packages are forced to their first versions in `release-please-config.json`
 2. **Create the GitHub environment** `npm` (Settings → Environments). Optionally add yourself as a required reviewer, so every publish waits for your approval.
 3. **Configure the trusted publisher on npmjs.com**, for each package (`grapesjs-advance-components` and `promptsite`): package → Settings → Trusted Publisher → GitHub Actions, then enter owner `VaibhavBansal26`, repository `grapesjs-advance-components`, workflow file `release.yml` and environment `npm`. The fields are case-sensitive and must match exactly, or npm refuses with a 403. Then, in each package's publishing settings, turn on "Require two-factor authentication and disallow tokens".
 4. **Merge the two Release PRs.** The plugin publishes first, then `promptsite`. The 2.0.0 notes only list commits that touched `packages/`, so paste the descriptions from the earlier PRs into that GitHub release by hand.
-5. **Remove `release-as`** from `release-please-config.json` in a follow-up commit, so later versions follow the commits.
 
 If trusted publishing fails (a 403 or "need auth"), the fallback is a token: create an npm *granular* token limited to the two packages, store it as the secret `NPM_TOKEN` in the `npm` environment, and add `env: NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}` to the two publish steps. Delete it again once trusted publishing works.
 

@@ -6,13 +6,11 @@
   "packages": {
     "packages/grapesjs-advance-components": {
       "release-type": "node",
-      "component": "grapesjs-advance-components",
-      "release-as": "2.2.0"
+      "component": "grapesjs-advance-components"
     },
     "packages/promptsite": {
       "release-type": "node",
-      "component": "promptsite",
-      "release-as": "0.1.0"
+      "component": "promptsite"
     }
   }
 }
