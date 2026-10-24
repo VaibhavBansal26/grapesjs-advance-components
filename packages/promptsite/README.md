@@ -13,7 +13,9 @@ You get an editable project plus plain static HTML, CSS and JS (no framework, no
 
 The model writes **validated JSON copy**, not markup. Templates render that copy into the blocks of [`grapesjs-advance-components`](https://www.npmjs.com/package/grapesjs-advance-components) and escape every string, so the output is safe by construction and fully editable afterwards.
 
-📖 **[Documentation](https://vaibhavbansal26.github.io/grapesjs-advance-components/#generate)**
+![Generate, edit visually, publish](https://raw.githubusercontent.com/VaibhavBansal26/grapesjs-advance-components/main/docs/assets/demo.gif)
+
+📖 **[Documentation](https://vaibhavbansal26.github.io/grapesjs-advance-components/#generate)** · 🧪 **[Try the editor in your browser](https://vaibhavbansal26.github.io/grapesjs-advance-components/playground.html)**
 
 ## Commands
 

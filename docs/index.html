@@ -70,6 +70,9 @@
   <div class="card"><h3>Multi-page</h3><p>Page manager and a one-call export to a standalone static site (.zip).</p></div>
 </div>
 
+<p><img src="assets/demo.gif" alt="Generate a site from one sentence, edit it visually, publish it" width="800" style="max-width:100%;height:auto;border-radius:8px"></p>
+<p style="font-size:.9rem;opacity:.75">A real recording of the CLI and editor, using the offline <code>--provider mock</code> so no API key is needed. Or <a href="playground.html">try the editor in your browser</a>.</p>
+
 <h2 id="packages">Two packages</h2>
 <p>The project ships as two npm packages that work together. Pick by what you want to do:</p>
 <table>
@@ -654,7 +657,7 @@ it('works', () =&gt; {
 <h3>Things to know</h3>
 <ul>
   <li><strong>One rule per selector.</strong> GrapesJS keeps only the last CSS rule for a selector, so <code>defineComponent</code> reports a selector declared twice in <code>css</code>.</li>
-  <li><strong>No <code>var()</code> inside shorthands.</strong> GrapesJS drops shorthand properties such as <code>background</code> or <code>border</code> when they contain <code>var(&hellip;)</code>. Use longhand (<code>background-color</code>, <code>border-left-color</code>). The same check runs on the built-in stylesheet.</li>
+  <li><strong>No <code>var()</code> inside shorthands.</strong> GrapesJS's default CSS parser is the browser's, and a shorthand such as <code>background</code>, <code>border</code>, <code>margin</code>, <code>padding</code>, <code>gap</code> or <code>white-space</code> that contains <code>var(&hellip;)</code> comes back as empty longhands, so the value is lost. Longhands such as <code>color</code>, <code>background-color</code>, <code>border-left-color</code> and <code>box-shadow</code> keep it. <code>defineComponent</code> checks about 70 such properties, which I verified in Chrome against GrapesJS 0.22; another browser may differ. The same check runs on the built-in stylesheet.</li>
   <li><strong>Unique ids.</strong> Installing a different definition under an id that is already registered, or one that clashes with a GrapesJS type, throws instead of overwriting it. Installing the same definition twice is harmless.</li>
   <li><strong>Block overrides.</strong> The plugin's <code>components</code> option can still rename or hide the built-in blocks (<code>visible: false</code>); for your own, use <code>block</code>.</li>
 </ul>
