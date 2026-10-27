@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.4.0](https://github.com/VaibhavBansal26/grapesjs-advance-components/compare/promptsite-v0.3.0...promptsite-v0.4.0) (2026-10-24)
+
+
+### Features
+
+* five more blocks, and lead the docs with the CLI ([812a76d](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/812a76d12295101c3cc40fc8f65b8df68d8dfb0a))
+* five more blocks, and lead the docs with the CLI ([f61e932](https://github.com/VaibhavBansal26/grapesjs-advance-components/commit/f61e932dca38c12158f736ba27cbf8358f63c522))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * grapesjs-advance-components bumped from ^2.3.0 to ^2.4.0
+
 ## [0.3.0](https://github.com/VaibhavBansal26/grapesjs-advance-components/compare/promptsite-v0.2.0...promptsite-v0.3.0) (2026-10-24)
 
 

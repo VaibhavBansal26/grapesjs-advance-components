@@ -1,6 +1,6 @@
 {
   "name": "promptsite",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "One sentence to an audited, ready-to-deploy website: generate a multi-page site with your own model, edit it visually, block leaked secrets, and deploy to Cloudflare Pages or Netlify.",
   "type": "module",
   "bin": {
@@ -47,7 +47,7 @@
   "license": "MIT",
   "dependencies": {
     "grapesjs": "^0.23.8",
-    "grapesjs-advance-components": "^2.3.0",
+    "grapesjs-advance-components": "^2.4.0",
     "jsdom": "^25.0.0"
   },
   "engines": {
