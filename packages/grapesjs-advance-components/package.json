@@ -1,6 +1,6 @@
 {
   "name": "grapesjs-advance-components",
-  "version": "2.3.0",
+  "version": "2.4.0",
   "description": "41 accessible, themeable GrapesJS blocks (pricing, testimonials, team, tabs, forms that submit, Stripe checkout), defineComponent for your own blocks, multi-page export and bring-your-own-model AI. No runtime dependencies.",
   "type": "module",
   "main": "./dist/index.cjs",
